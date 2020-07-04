@@ -26,7 +26,13 @@ class PVT:
         self.A0 = fluidData['A0']
 
         ## Calculation
-        self.A1 = 1 - ((self.pressure - 14.7)/(self.pressureK - 14.7))**self.A0
+        if hasattr(self, 'A1'):
+            pass
+        else:
+            try:
+                self.A1 = 1 - ((self.pressure - 14.7)/(self.pressureK - 14.7))**self.A0
+            except:
+                raise ValueError("Not enough information to calculation A1. Give A0 information in the fluid .json file")
 
 
 
@@ -44,7 +50,6 @@ class PVT:
             self.critical_pressure = component['Critical_Pressure']
             self.critical_temperature = component['Critical_Temperature']
             self.accentric_factor = component['Accentric_Factor']
-
 
 
     def get_A1(self):
@@ -149,11 +154,11 @@ if __name__ == "__main__":
     for comp in fluid.get_component():
         totalZ += comp.mole_fraction
 
-    if totalZ == 1:
+    if abs(totalZ - 1) < 10**-4:
         print("Mole fraction adds up to 1")
         pass
     else:
-        raise ValueError("Mole fraction does not add up to 1")
+        raise ValueError("Mole fraction adds up to %s and does not add up to 1" %totalZ)
 
 
     # Write the dataframe
@@ -175,6 +180,7 @@ if __name__ == "__main__":
     while abs(np.sum(df['h_i'].to_numpy())) > 10**-8:
 
         if iter > fluid.max_iter:
+            print(df)
             raise RuntimeError("Exceeded maximum iteration of %d to calculate fv" %fluid.max_iter)
             # break
         # Get new fv

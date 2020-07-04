@@ -1,0 +1,82 @@
+{
+    "PressureK" : 4050,
+    "Pressure" : 3100,
+    "Temperature" : 696,
+    "A0" : 0.7,
+    "fv" : 0.5,
+    "max_iter" : 100,
+    "component": {
+        "CO2" : {
+            "Mole_Fraction" : 0.0111,
+            "Critical_Pressure" : 1070.6,
+            "Critical_Temperature" : 547.6,
+            "Accentric_Factor" : 0.2310
+        },
+        "C1" : {
+            "Mole_Fraction" : 0.3950,
+            "Critical_Pressure" : 667.8,
+            "Critical_Temperature" : 343.0,
+            "Accentric_Factor" : 0.0115
+        },
+        "C2" : {
+            "Mole_Fraction" : 0.0969,
+            "Critical_Pressure" : 707.8,
+            "Critical_Temperature" : 549.8,
+            "Accentric_Factor" : 0.0908
+        },
+        "C3" : {
+            "Mole_Fraction" : 0.0784,
+            "Critical_Pressure" : 616.3,
+            "Critical_Temperature" : 665.7,
+            "Accentric_Factor" : 0.1454
+        },
+        "i_C4" : {
+            "Mole_Fraction" : 0.0159,
+            "Critical_Pressure" : 529.1,
+            "Critical_Temperature" : 734.7,
+            "Accentric_Factor" : 0.1756
+        },
+        "C4" : {
+            "Mole_Fraction" : 0.0372,
+            "Critical_Pressure" : 550.7,
+            "Critical_Temperature" : 765.3,
+            "Accentric_Factor" : 0.1928
+        },
+        "i_C5" : {
+            "Mole_Fraction" : 0.0123,
+            "Critical_Pressure" : 490.4,
+            "Critical_Temperature" : 828.8,
+            "Accentric_Factor" : 0.2273
+        },
+        "C5" : {
+            "Mole_Fraction" : 0.0211,
+            "Critical_Pressure" : 488.6,
+            "Critical_Temperature" : 845.4,
+            "Accentric_Factor" : 0.2510
+        },
+        "C6" : {
+            "Mole_Fraction" : 0.0295,
+            "Critical_Pressure" : 436.9,
+            "Critical_Temperature" : 913.4,
+            "Accentric_Factor" : 0.2957
+        },
+        "F1" : {
+            "Mole_Fraction" : 0.1578,
+            "Critical_Pressure" : 409.6,
+            "Critical_Temperature" : 1065.5,
+            "Accentric_Factor" : 0.3255
+        },
+        "F2" : {
+            "Mole_Fraction" : 0.1243,
+            "Critical_Pressure" : 235.1,
+            "Critical_Temperature" : 1356.0,
+            "Accentric_Factor" : 0.6538
+        },
+        "F3" : {
+            "Mole_Fraction" : 0.0205,
+            "Critical_Pressure" : 134.6,
+            "Critical_Temperature" : 1689.1,
+            "Accentric_Factor" : 1.1489
+        }
+    }
+}
