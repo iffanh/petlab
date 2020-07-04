@@ -138,6 +138,22 @@ def fill_liquid_and_gas_comp_table(df, fluid):
 
     return df
 
+def write_to_csv(row, resultPath):
+    with open(resultPath, 'a') as fd:
+        fd.write(row)
+
+def write_header_for_csv(fluid, resultPath):
+
+    write_to_csv('FLASH CALCULATION \n', resultPath)
+    write_to_csv('Convergence pressure, %s, psia \n' %fluid.pressureK, resultPath)
+    write_to_csv('Pressure, %s, psia \n' %fluid.pressure, resultPath)
+    write_to_csv('Temperature, %s, Rankine \n' %fluid.temperature, resultPath)
+    write_to_csv('A0, %s \n' %fluid.A0, resultPath)
+    write_to_csv('A1, %s \n' %fluid.A1, resultPath)
+
+
+
+
 if __name__ == "__main__":
 
     if len(sys.argv) != 3:
@@ -145,6 +161,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     fluid_path = sys.argv[1]
+    resultPath = sys.argv[2]
 
     # fluid = PVT("./pvt_dataset_1.json")
     fluid = PVT(fluid_path)
@@ -160,10 +177,13 @@ if __name__ == "__main__":
     else:
         raise ValueError("Mole fraction adds up to %s and does not add up to 1" %totalZ)
 
+    # Write headers
+
+    write_header_for_csv(fluid, resultPath)
 
     # Write the dataframe
     # resultPath = "./results/pvt_results.csv"
-    resultPath = sys.argv[2]
+
     df = pd.DataFrame()
     df['Component'] = [x.name for x in fluid.get_component()]
     df['Mole_Fraction'] = [x.mole_fraction for x in fluid.get_component()]
@@ -190,10 +210,11 @@ if __name__ == "__main__":
 
         iter += 1
 
+    write_to_csv('fv, %s \n' %fluid.fv, resultPath)
 
     df = fill_liquid_and_gas_comp_table(df, fluid)
 
-    df.to_csv(resultPath, index = False, header=True)
+    df.to_csv(resultPath, mode='a', index = False, header=True)
 
     print('SUCCESS: Flash calculation success')
 
