@@ -1,0 +1,28 @@
+{
+    "PressureK" : 2000,
+    "Pressure" : 500,
+    "Temperature" : 620,
+    "A0" : 0.7,
+    "fv" : 0.5,
+    "max_iter" : 100,
+    "component": {
+        "C1" : {
+            "Mole_Fraction" : 0.20,
+            "Critical_Pressure" : 667.8,
+            "Critical_Temperature" : 343.0,
+            "Accentric_Factor" : 0.0115
+        },
+        "C3" : {
+            "Mole_Fraction" : 0.32,
+            "Critical_Pressure" : 616.3,
+            "Critical_Temperature" : 665.7,
+            "Accentric_Factor" : 0.1454
+        },
+        "n_C5" : {
+            "Mole_Fraction" : 0.48,
+            "Critical_Pressure" : 488.6,
+            "Critical_Temperature" : 845.4,
+            "Accentric_Factor" : 0.2510
+        }
+    }
+}
