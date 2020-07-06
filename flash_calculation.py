@@ -32,7 +32,7 @@ class PVT:
             try:
                 self.A1 = 1 - ((self.pressure - 14.7)/(self.pressureK - 14.7))**self.A0
             except:
-                raise ValueError("Not enough information to calculation A1. Give A0 information in the fluid .json file")
+                raise ValueError("Not enough information to calculate A1. Give A0 information in the fluid .json file")
 
 
 
@@ -152,8 +152,6 @@ def write_header_for_csv(fluid, resultPath):
     write_to_csv('A1, %s \n' %fluid.A1, resultPath)
 
 
-
-
 if __name__ == "__main__":
 
     if len(sys.argv) != 3:
@@ -163,7 +161,6 @@ if __name__ == "__main__":
     fluid_path = sys.argv[1]
     resultPath = sys.argv[2]
 
-    # fluid = PVT("./pvt_dataset_1.json")
     fluid = PVT(fluid_path)
 
     # Check compositions to add up to 1
@@ -182,7 +179,6 @@ if __name__ == "__main__":
     write_header_for_csv(fluid, resultPath)
 
     # Write the dataframe
-    # resultPath = "./results/pvt_results.csv"
 
     df = pd.DataFrame()
     df['Component'] = [x.name for x in fluid.get_component()]
