@@ -10,22 +10,22 @@ from functools import partial
 
 import common
 
-class DrawdownTest:
+class DrawdownAnalysis:
 
-    def __init__(self, ddFile):
+    def __init__(self, dd_file):
 
-        with open(ddFile, 'r') as f:
-            ddData = json.load(f)
+        with open(dd_file, 'r') as f:
+            dd_data = json.load(f)
 
-        self.rate = ddData['Rate']
-        self.viscosity = ddData['Viscosity']
-        self.porosity = ddData['Porosity']
-        self.pressure = ddData['Pressure']
-        self.well_radius = ddData['Well_Radius']
-        self.reservoir_height = ddData['Reservoir_Height']
-        self.total_compressibility = ddData['Total_Compressibility']
-        self.pressure_data = ddData['Pressure_Data']
-        self.time_data = ddData['Time_Data']
+        self.rate = dd_data['Rate']
+        self.viscosity = dd_data['Viscosity']
+        self.porosity = dd_data['Porosity']
+        self.pressure = dd_data['Pressure']
+        self.well_radius = dd_data['Well_Radius']
+        self.reservoir_height = dd_data['Reservoir_Height']
+        self.total_compressibility = dd_data['Total_Compressibility']
+        self.pressure_data = dd_data['Pressure_Data']
+        self.time_data = dd_data['Time_Data']
 
         if len(self.pressure_data) == len(self.time_data):
             pass
@@ -144,7 +144,7 @@ if __name__ == "__main__":
 
     # fileName = './json_files/dd_dataset_1.json'
 
-    data = DrawdownTest(file_path)
+    data = DrawdownAnalysis(file_path)
 
     ii_init = 0
     ii_last = len(data.time_data)
