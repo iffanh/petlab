@@ -20,7 +20,7 @@ class DrawdownAnalysis:
         self.rate = dd_data['Rate']
         self.viscosity = dd_data['Viscosity']
         self.porosity = dd_data['Porosity']
-        self.pressure = dd_data['Pressure']
+        self.initial_pressure = dd_data['Initial_Pressure']
         self.well_radius = dd_data['Well_Radius']
         self.reservoir_height = dd_data['Reservoir_Height']
         self.total_compressibility = dd_data['Total_Compressibility']
@@ -39,9 +39,21 @@ def sort_list_if_not_empty(index_list):
     else:
         index_list.sort()
 
-def calculate_permeability(data, slope):
+def calculate_permeability(rate, viscosity, reservoir_height, slope):
 
-    return (-1* data.rate * data.viscosity / (4 * np.pi * data.reservoir_height * slope ))
+    return (-1* rate * viscosity / (4 * np.pi * reservoir_height * slope ))
+
+def calculate_hydraulic_diffusivity(total_compressibility, porosity, viscosity, perm):
+
+    return perm/(total_compressibility * porosity * viscosity)
+
+def calculate_skin_factor(point_p, intercept, slope, hyd_diff, radius, point_t):
+
+    return 0.5*( ((point_p - intercept)/slope) - np.log(4*hyd_diff*point_t/(radius**2)) + 0.5722 )
+
+def calculate_dp_due_to_skin(rate, viscosity, skin, perm, reservoir_height):
+
+    return rate * viscosity * skin / (2 * np.pi * perm * reservoir_height)
 
 def onpick(event, data, indx, non_indx, dots, line_fit, ax, result_path):
 
@@ -49,35 +61,38 @@ def onpick(event, data, indx, non_indx, dots, line_fit, ax, result_path):
     if not N: return True
 
     thisline = event.artist
-    xdata = thisline.get_xdata()
-    ydata = thisline.get_ydata()
+    # xdata = thisline.get_xdata()
+    # ydata = thisline.get_ydata()
     ind = event.ind
 
-
-    if ind in indx:
-        indx.remove(ind)
-        non_indx.extend(ind)
-
+    if (ind in indx) and (len(indx) <= 2):
+        print('Minimum two points in the graph are allowed')
         sort_list_if_not_empty(indx)
         sort_list_if_not_empty(non_indx)
-
+        draw_drawdown_plot(data, dots, line_fit, indx, non_indx, ax, result_path)
+        plt.draw()
     else:
-        non_indx.remove(ind)
-        indx.extend(ind)
+        if ind in indx:
+            indx.remove(ind)
+            non_indx.extend(ind)
 
-        sort_list_if_not_empty(indx)
-        sort_list_if_not_empty(non_indx)
+            sort_list_if_not_empty(indx)
+            sort_list_if_not_empty(non_indx)
 
-    ax.cla()
+        else:
+            non_indx.remove(ind)
+            indx.extend(ind)
 
-    draw_drawdown_plot(data, indx, non_indx, ax, result_path)
+            sort_list_if_not_empty(indx)
+            sort_list_if_not_empty(non_indx)
 
-    plt.legend()
-    plt.draw()
+        draw_drawdown_plot(data, dots, line_fit, indx, non_indx, ax, result_path)
+
+        plt.draw()
 
     return True
 
-def draw_drawdown_plot(data, indx, non_indx, ax, result_path):
+def draw_drawdown_plot(data, dots, line_fit, indx, non_indx, ax, result_path):
 
     data_x_on = np.array(data.time_data)[indx]
     data_y_on = np.array(data.pressure_data)[indx]
@@ -85,6 +100,7 @@ def draw_drawdown_plot(data, indx, non_indx, ax, result_path):
     data_x_off = np.array(data.time_data)[non_indx]
     data_y_off = np.array(data.pressure_data)[non_indx]
 
+    # else:
     slope, intercept, r_value, p_value, std_err = scipy.stats.linregress(np.log(data_x_on), data_y_on)
 
     y_init = slope*np.log(data.time_data[0]) + intercept
@@ -93,14 +109,10 @@ def draw_drawdown_plot(data, indx, non_indx, ax, result_path):
     x_fit = [data.time_data[0], data.time_data[-1]]
     y_fit = [y_init, y_last]
 
-    # y_init = slope*np.log(data_x_on[0]) + intercept
-    # y_last = slope*np.log(data_x_on[-1]) + intercept
-
-    # x_fit = [data_x_on[0], data_x_on[-1]]
-    # y_fit = [y_init, y_last]
 
     color_list = ['g' if i in indx else 'b' for i, d in enumerate(data.time_data)]
 
+    ax.cla()
     line_fit = ax.plot(x_fit, y_fit, 'g--')
     dots_on, = ax.plot(data_x_on, data_y_on, 'o', c = 'g', label='On')
     dots_off, = ax.plot(data_x_off, data_y_off, 'o', c = 'r', label='Off')
@@ -109,6 +121,7 @@ def draw_drawdown_plot(data, indx, non_indx, ax, result_path):
     ax.set_xlabel("time (s)")
     ax.set_ylabel("pressure (Pa)")
     ax.set_xscale('log')
+    plt.legend()
 
     print('intercept = %s' %intercept)
     print('slope = %s' %slope)
@@ -116,12 +129,20 @@ def draw_drawdown_plot(data, indx, non_indx, ax, result_path):
     print('p-value = %s' %p_value)
 
     # Calculate permeability
-    perm = calculate_permeability(data, slope)
-
+    perm = calculate_permeability(data.rate, data.viscosity, data.reservoir_height, slope)
     perm_in_md = perm * 1.01325E+15
+    hyd_diff = calculate_hydraulic_diffusivity(data.total_compressibility, data.porosity, data.viscosity, perm)
+    skin_factor = calculate_skin_factor(data_y_on[0], data.initial_pressure, slope, hyd_diff, data.well_radius, data_x_on[0])
+    dp_skin = calculate_dp_due_to_skin(data.rate, data.viscosity, skin_factor, perm, data.reservoir_height)
 
     print('Permeability = %s m2' %perm)
     print('Permeability = %s mD' %perm_in_md)
+    print('Hydraulic diffusivity = %s m2/s' %hyd_diff)
+    print('Skin Factor = %s' %skin_factor)
+    print('DP Skin = %s Pa' %dp_skin)
+    print(data_y_on[0], data_x_on[0])
+
+    print(' *** ')
 
     common.write_to_csv('Intercept, %s \n' %intercept, result_path)
     common.append_to_csv('slope, %s, Pa \n' %slope, result_path)
@@ -129,6 +150,9 @@ def draw_drawdown_plot(data, indx, non_indx, ax, result_path):
     common.append_to_csv('p-value, %s \n' %p_value, result_path)
     common.append_to_csv('Permeability, %s, m2 \n' %perm, result_path)
     common.append_to_csv('Permeability, %s, mD \n' %perm_in_md, result_path)
+    common.append_to_csv('Hydraulic diffusivity, %s, m2/s \n' %hyd_diff, result_path)
+    common.append_to_csv('Skin factor, %s \n' %skin_factor, result_path)
+    common.append_to_csv('DP Skin, %s \n' %dp_skin, result_path)
 
 
     return dots, line_fit
@@ -142,8 +166,6 @@ if __name__ == "__main__":
     file_path = sys.argv[1]
     result_path = sys.argv[2]
 
-    # fileName = './json_files/dd_dataset_1.json'
-
     data = DrawdownAnalysis(file_path)
 
     ii_init = 0
@@ -154,7 +176,11 @@ if __name__ == "__main__":
 
     fig, ax = plt.subplots(1, 1, figsize=(16,9))
 
-    dots, line_fit = draw_drawdown_plot(data, indx, non_indx, ax, result_path)
+    # Dummy axis
+    dots, = ax.plot([], [])
+    line_fit, = ax.plot([], [])
+
+    dots, line_fit = draw_drawdown_plot(data, dots, line_fit, indx, non_indx, ax, result_path)
 
     fig.canvas.mpl_connect('pick_event', lambda event: onpick(event, data, indx, non_indx, dots, line_fit, ax, result_path))
     plt.legend()

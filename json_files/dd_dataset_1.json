@@ -2,7 +2,7 @@
     "Rate" : 0.000729167,
     "Viscosity" : 3.9E-3,
     "Porosity" : 0.2,
-    "Pressure" : 12E+6,
+    "Initial_Pressure" : 12E+6,
     "Well_Radius" : 0.075,
     "Reservoir_Height" : 40,
     "Total_Compressibility" : 1.3E-9,
