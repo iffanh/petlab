@@ -34,8 +34,6 @@ class PVT:
             except:
                 raise ValueError("Not enough information to calculate A1. Give A0 information in the fluid .json file")
 
-
-
     def get_component(self):
         return [self.Component(comp, self.component[comp]) for comp in self.component.keys()]
 

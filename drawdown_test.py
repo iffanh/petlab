@@ -140,7 +140,7 @@ def draw_drawdown_plot(data, dots, line_fit, indx, non_indx, ax, result_path):
     print('Hydraulic diffusivity = %s m2/s' %hyd_diff)
     print('Skin Factor = %s' %skin_factor)
     print('DP Skin = %s Pa' %dp_skin)
-    print(data_y_on[0], data_x_on[0])
+
 
     print(' *** ')
 

@@ -10,7 +10,7 @@ Run flash_calculation.py with the following command:
 
 Sample data set is given under the json_files folder. Run the sample data as follows:
 
-``` python flash_calculation.py ./json_files/pvt_dataset_2.json ./results/pvt_dataset_2_result.csv ```
+``` python flash_calculation.py ./json_files/flash_calculation/pvt_dataset_2.json ./results/pvt_dataset_2_result.csv ```
 
 ## drawdown_test.py
 
@@ -22,4 +22,4 @@ Run drawdown_test.py with the following command:
 
 Sample data set is given under the json_files folder. Run the sample data as follows:
 
-``` python flash_calculation.py ./json_files/dd_dataset_1.json ./results/dd_dataset_1_result.csv ```
+``` python flash_calculation.py ./json_files/dradown_test/dd_dataset_1.json ./results/dd_dataset_1_result.csv ```
