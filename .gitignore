@@ -1,2 +1,11 @@
 
 test/object_pick.py
+*.pyc
+*.DBG
+*.EGRID
+*.INFOSTEP
+*.INIT
+*.PRT
+*.SMSPEC
+*.UNRST
+*.UNSMRY
