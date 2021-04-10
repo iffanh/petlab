@@ -4,7 +4,7 @@ import os
 class DeckParser():
 
     def __init__(self):
-        return 
+        return
 
     def keyword_search(self, deck_path:str, keyword:str="METRIC"):
         """
