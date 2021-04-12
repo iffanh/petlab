@@ -9,7 +9,7 @@ class RelativePermeability():
 
 class CoreyCorrelation():
 
-    def __init__(self, sl, sr, krw, krnw, nw, nnw):
+    def __init__(self, sl:float, sr:float, krw:float, krnw:float, nw:float, nnw:float):
 
         """
         Args:
@@ -57,7 +57,19 @@ class CoreyCorrelation():
 
         return
 
-    def _normalized_saturation(self, s, sl, sr):
+    def make_table(self, sat:list=[]):
+        
+        if len(sat) == 0:
+            sat = [_s*0.1 for _s in range(0,11)]
+
+        krw = [self.krw(_s) for _s in sat]
+        krnw = [self.krnw(_s) for _s in sat]
+        
+        table = [[s, w, nw, 0.0] for s, w, nw in zip(sat, krw, krnw)]
+        
+        return table
+
+    def _normalized_saturation(self, s:float, sl:float, sr:float) -> float:
         """ This function normalizes the saturation based on its
         'irreducible' values
 
@@ -79,7 +91,7 @@ class CoreyCorrelation():
 
         return sn
 
-    def _normalized_rperm(self, s, sl, sr, k_end, exponent):
+    def _normalized_rperm(self, s:float, sl:float, sr:float, k_end:float, exponent:float) -> float:
 
         """This function returns the value of relative permeability as a function
         of saturation (s), given its 'irreducible' saturations.
