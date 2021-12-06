@@ -1,0 +1,21 @@
+{
+    "Name": "IE_Poro",
+    "Ne": 5, 
+    "parameters":
+        {"$POROSITY": 
+            {"Normal": {"mean": 0.3, 
+                        "std": 0.02,
+                        "min": 0.2, 
+                        "max": 0.35,
+                        "type": "float"}}, 
+         "$PERMX1":
+            {"Constant": {"value": 500,
+                          "type": "float"}},
+         "$PERMX2":
+            {"Constant": {"value": 50,
+                          "type": "float"}},
+         "$PERMX3":
+            {"Constant": {"value": 200,
+                          "type": "float"}}
+        }
+}

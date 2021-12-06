@@ -1,0 +1,30 @@
+{
+    "Name": "IE_PoroPerm",
+    "Ne": 5, 
+    "parameters":
+        {"$POROSITY": 
+            {"Normal": {"mean": 0.3, 
+                        "std": 0.02,
+                        "min": 0.2, 
+                        "max": 0.35,
+                        "type": "float"}}, 
+         "$PERMX1":
+            {"LogNormal": {"mean": 500, 
+                            "std": 100,
+                            "min": 400, 
+                            "max": 650,
+                            "type": "float"}},
+         "$PERMX2":
+            {"LogNormal": {"mean": 50, 
+                            "std": 10,
+                            "min": 0.1, 
+                            "max": 100,
+                            "type": "float"}},
+         "$PERMX3":
+            {"LogNormal": {"mean": 200, 
+                            "std": 40,
+                            "min": 20, 
+                            "max": 400,
+                            "type": "float"}}
+        }
+}

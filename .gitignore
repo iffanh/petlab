@@ -9,3 +9,6 @@ test/object_pick.py
 *.SMSPEC
 *.UNRST
 *.UNSMRY
+
+storage/
+studies/
