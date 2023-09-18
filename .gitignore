@@ -12,3 +12,6 @@ test/object_pick.py
 
 storage/
 studies/
+
+*.npy
+venv/*

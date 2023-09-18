@@ -4,15 +4,17 @@ import numpy as np
 import scipy.stats
 from utils import deck_parser as dp
 from datetime import datetime
-
+import utils.utilities as u
 import sys
 import os
 import json
 
 from pathlib import Path
 
-STORAGE_DIR = '/mnt/c/Users/iffan/Documents/Github/petlab/storage/'
-STUDIES_DIR = '/mnt/c/Users/iffan/Documents/Github/petlab/studies/'
+# STORAGE_DIR = '/mnt/c/Users/iffan/Documents/Github/petlab/storage/'
+# STUDIES_DIR = '/mnt/c/Users/iffan/Documents/Github/petlab/studies/'
+STORAGE_DIR = './simulations/storage/'
+STUDIES_DIR = './simulations/studies/'
 Path(STORAGE_DIR).mkdir(parents=True, exist_ok=True)
 Path(STUDIES_DIR).mkdir(parents=True, exist_ok=True)
 
@@ -97,13 +99,18 @@ def dump_ensemble(data, real_files, root_datafile_path, json_path):
     timestamp = datetime.timestamp(now)
     dt_object = str(datetime.fromtimestamp(timestamp))
 
-    study = {'root': root_datafile_path,
-             'json': json_path,
-             'timestamp': dt_object,
-             'realizations': real_files}
-
-    with open(ensemble_study, 'w') as f:
-        json.dump(study, f, indent=4)
+    ens_path = os.path.join(STORAGE_DIR, data['Name'])
+    
+    study = {'status':"created",
+             'creation': {
+                'root': root_datafile_path,
+                'json': json_path,
+                'timestamp': dt_object,
+                'realizations': real_files,
+                'storage': ens_path}    
+             }
+             
+    u.save_to_json(ensemble_study, study)
 
 def main(argv):
 
@@ -111,21 +118,23 @@ def main(argv):
     json_path = argv[1] # path to the json file e.g. /path/to/json/SPE1.json
     
     if not os.path.isfile(root_datafile_path):
-        ValueError("%s cannot be found" %root_datafile_path)
+        raise ValueError("%s cannot be found" %root_datafile_path)
 
     if not os.path.isfile(json_path):
-        ValueError("%s cannot be found" %json_path)
+        raise ValueError("%s cannot be found" %json_path)
 
     data = parse_json_file(json_path)
     
     real_files = mutate_cases(data, root_datafile_path)
 
     dump_ensemble(data, real_files, root_datafile_path, json_path)
-
+    print("Done")
 if __name__ == "__main__":
     """The arguments are the following:
     1. root path (str): path to the ensemble .DATA deck
     2. json path (str): path to the .json file that explains the uncertainties in the model 
+    
+    Ex: "python3 src/create_ensemble.py data/SPE1_Ensemble/SPE1.DATA data/SPE1_Ensemble/SPE1_Poro.json"
     """
 
     main(sys.argv[1:])
