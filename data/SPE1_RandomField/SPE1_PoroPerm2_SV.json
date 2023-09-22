@@ -1,14 +1,16 @@
 {
-    "Name": "IE_PoroPerm",
+    "Name": "IE_PoroPerm2_SV",
     "Ne": 5,
-    "root": "./data/SPE1_Ensemble/SPE1.DATA",
+    "root": "./data/SPE1_RandomField/SPE1_SV.DATA",
     "parameters":
-        [
-         {
+        [{
              "Name": "$POROSITY", 
              "Type": "SingleValue",
              "Distribution": {
                 "name": "Normal",
+                "size": [10, 10, 3],
+                "scale": [4, 4, 2],
+                "angles": 0,
                 "parameters": {
                         "mean": 0.3, 
                         "std": 0.02,
@@ -21,7 +23,10 @@
              "Name": "$PERMX1",
              "Type": "SingleValue",
              "Distribution": {
-                "name": "Normal",
+                "name": "LogNormal",
+                "size": [10, 10, 1],
+                "scale": [4, 4, 2],
+                "angles": 0,
                 "parameters": {
                         "mean": 500, 
                         "std": 100,
@@ -34,9 +39,12 @@
             "Name": "$PERMX2",
             "Type": "SingleValue",
             "Distribution": {
-                "name": "Normal",
+                "name": "LogNormal",
+                "size": [10, 10, 1],
+                "scale": [4, 4, 2],
+                "angles": 0,
                 "parameters": {
-                        "mean": 50, 
+                        "mean": 50,  
                         "std": 10,
                         "min": 0.1, 
                         "max": 100,
@@ -47,7 +55,10 @@
             "Name": "$PERMX3",
             "Type": "SingleValue",
             "Distribution": {
-                "name": "Normal",
+                "name": "LogNormal",
+                "size": [10, 10, 1],
+                "scale": [4, 4, 2],
+                "angles": 0,
                 "parameters": {
                         "mean": 200, 
                         "std": 40,
@@ -55,9 +66,18 @@
                         "max": 400,
                         "type": "float"}
             }
-         }
-      ],
-    "optimization":
-         [
-         ]
+         }],
+   "controls":
+            [
+               {
+                  "Name": "$PRODRATE",
+                  "Default": 20000,
+                  "type": "float"
+               },
+               {
+                  "Name": "$INJRATE",
+                  "Default": 100000,
+                  "type": "float"
+               }
+            ]
 }

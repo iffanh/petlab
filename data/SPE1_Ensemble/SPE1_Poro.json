@@ -1,21 +1,54 @@
 {
     "Name": "IE_Poro",
-    "Ne": 5, 
+    "Ne": 5,
+    "root": "./data/SPE1_Ensemble/SPE1.DATA",
     "parameters":
-        {"$POROSITY": 
-            {"Normal": {"mean": 0.3, 
+        [
+         {
+             "Name": "$POROSITY", 
+             "Type": "SingleValue",
+             "Distribution": {
+                "name": "Normal",
+                "parameters": {
+                        "mean": 0.3, 
                         "std": 0.02,
                         "min": 0.2, 
                         "max": 0.35,
-                        "type": "float"}}, 
-         "$PERMX1":
-            {"Constant": {"value": 500,
-                          "type": "float"}},
-         "$PERMX2":
-            {"Constant": {"value": 50,
-                          "type": "float"}},
-         "$PERMX3":
-            {"Constant": {"value": 200,
-                          "type": "float"}}
-        }
+                        "type": "float"}
+            }
+         }, 
+         {
+             "Name": "$PERMX1",
+             "Type": "SingleValue",
+             "Distribution": {
+                "name": "Constant",
+                "parameters": {
+                        "value": 500,
+                        "type": "float"}
+            }
+         },
+         {
+            "Name": "$PERMX2",
+            "Type": "SingleValue",
+            "Distribution": {
+               "name": "Constant",
+               "parameters": {
+                       "value": 50,
+                       "type": "float"}
+           }
+         },
+         {
+            "Name": "$PERMX3",
+            "Type": "SingleValue",
+            "Distribution": {
+               "name": "Constant",
+               "parameters": {
+                       "value": 200,
+                       "type": "float"}
+           }
+         }
+         ],
+    "optimization":
+         [
+         ]
 }
