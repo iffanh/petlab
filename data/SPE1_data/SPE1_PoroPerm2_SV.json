@@ -1,7 +1,7 @@
 {
     "Name": "IE_PoroPerm2_SV",
     "Ne": 5,
-    "root": "./data/SPE1_RandomField/SPE1_SV.DATA",
+    "root": "./data/SPE1_data/SPE1_SV.DATA",
     "parameters":
         [{
              "Name": "$POROSITY", 
