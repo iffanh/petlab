@@ -1,4 +1,4 @@
-import json
+from tqdm import tqdm
 import sys
 import os
 import subprocess
@@ -28,8 +28,6 @@ def change_control(base_datafile_path, real_datafile_path, controls):
     # Write the file out again
     with open(real_datafile_path, 'w') as file:
         file.write(filedata)
-    
-    return
 
 def run_case(simulator_path, real_name, real_path):
 
@@ -43,34 +41,32 @@ def run_case(simulator_path, real_name, real_path):
     if result:
         raise RuntimeError("%s failed to run" %real_path)
     else: 
-        print("%s ran successfully" %real_name)
+        # print("%s ran successfully" %real_name)
+        pass
 
-def run_cases(simulator_path, study_path):
-        
-    study = u.read_json(study_path)
+def run_cases(simulator_path, study, simfolder_path, controls):
     
-    config = u.read_json(study['creation']['json'])
+    # config = u.read_json(study['creation']['json'])
     
     _, tail = os.path.split(study['creation']['root']) # dir_path = /path/to/data
     root_name = os.path.splitext(tail)[0] #root_name = SPE1
     
-    # create actual realization folders
-    actual_path = os.path.join(STORAGE_DIR, study['Name'])
-    Path(actual_path).mkdir(parents=True, exist_ok=True)
-    
     base_realizations = study['creation']['base_realizations']
 
     realizations = {}
-    for i, real_name in enumerate(base_realizations.keys()):
+    l = len(base_realizations)
+    # u.printProgressBar(0, l, prefix = 'Progress:', suffix = 'Complete', length = 50)
+
+    for i, real_name in tqdm(enumerate(base_realizations.keys()), total=l, desc="Simulation: "):
         
         real_name = root_name + '_%s'%(i+1) # SPE1_i
         
-        real_path = os.path.join(actual_path, real_name) # /path/to/data/SPE1_i
+        real_path = os.path.join(simfolder_path, real_name) # /path/to/data/SPE1_i
         Path(real_path).mkdir(parents=True, exist_ok=True)
 
         real_datafile_path = os.path.join(real_path, real_name + '.DATA') # /path/to/data/SPE1_i/SPE1_i.DATA
     
-        change_control(base_realizations[real_name], real_datafile_path, config['controls'])
+        change_control(base_realizations[real_name], real_datafile_path, controls)
         run_case(simulator_path, real_name, real_datafile_path)
         
         realizations[real_name] = real_datafile_path
@@ -88,7 +84,15 @@ def main(argv):
     now = datetime.now()
     timestamp = datetime.timestamp(now)
     dt_start = str(datetime.fromtimestamp(timestamp))
-    realizations = run_cases(simulator_path, study_path)
+    
+    study = u.read_json(study_path)
+    
+    # create actual realization folders
+    simfolder_path = os.path.join(STORAGE_DIR, study['Name'])
+    Path(simfolder_path).mkdir(parents=True, exist_ok=True)
+    
+    config = u.read_json(study['creation']['json'])
+    realizations = run_cases(simulator_path, study, simfolder_path, config['controls'])
     now = datetime.now()
     timestamp = datetime.timestamp(now)
     dt_end = str(datetime.fromtimestamp(timestamp))
@@ -101,6 +105,8 @@ def main(argv):
     studies["simulation"]["end"] = dt_end
     studies["simulation"]["realizations"] = realizations
     
+    ens_path = os.path.join(STORAGE_DIR, studies['Name'])
+    studies["simulation"]["storage"] = ens_path
     
     studies["extraction"] = {} # make sure the data extraction is up-to-date
     

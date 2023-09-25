@@ -24,6 +24,18 @@ class SummaryKeys():
                      "WWPR",
                      "WGPR",
                      "WOPR",
+                     "FWIT", 
+                     "FGIT",
+                     "FOIT",
+                     "WWIT",
+                     "WGIT",
+                     "WOIT",
+                     "FWIR",
+                     "FGIR",
+                     "FOIR",
+                     "WWIR",
+                     "WGIR",
+                     "WOIR",
                      "FGOR",
                      "WFOR",
                      "WBHP"]
@@ -43,10 +55,7 @@ class Dynamic3DPropertyKeys():
                      "SWAT",
                      "RS"]
         
-def get_summary(study_path):
-    
-    studies = u.read_json(study_path)
-    realizations = studies["simulation"]["realizations"]
+def get_summary(realizations, storage):
     
     casename = list(realizations.keys())[0]
     # for casename in realizations:
@@ -60,7 +69,7 @@ def get_summary(study_path):
             if _k in k:
                 available_keys.append(k)
                 
-    data_dir = os.path.join(studies["creation"]["storage"], "results", "summary")
+    data_dir = os.path.join(storage, "results", "summary")
     Path(data_dir).mkdir(parents=True, exist_ok=True)
     
     summary_dict = {}
@@ -86,10 +95,7 @@ def get_summary(study_path):
     
     return summary_dict
 
-def get_3dprops(study_path):
-    
-    studies = u.read_json(study_path)
-    realizations = studies["simulation"]["realizations"]
+def get_3dprops(realizations, storage):
     
     cs = list(realizations.keys())[0]
     # for casename in realizations:
@@ -106,7 +112,7 @@ def get_3dprops(study_path):
             if _k in k:
                 static_available_keys.append(k)
         
-    data_dir = os.path.join(studies["creation"]["storage"], "results", "static3d")
+    data_dir = os.path.join(storage, "results", "static3d")
     Path(data_dir).mkdir(parents=True, exist_ok=True)
     
     static3d_dict = {}
@@ -139,7 +145,7 @@ def get_3dprops(study_path):
             if _k in k:
                 dynamic_available_keys.append(k)
         
-    data_dir = os.path.join(studies["creation"]["storage"], "results", "dynamic3d")
+    data_dir = os.path.join(storage, "results", "dynamic3d")
     Path(data_dir).mkdir(parents=True, exist_ok=True)
     
     dynamic3d_dict = {}
@@ -172,18 +178,20 @@ def get_3dprops(study_path):
 def main(argv):
 
     study_path = argv[0]
+    studies = u.read_json(study_path)
     
+    realizations = studies["simulation"]["realizations"]
+    storage = studies["simulation"]["storage"]
     # check summary
-    summary = get_summary(study_path)
+    summary = get_summary(realizations, storage)
     
-    static3d, dynamic3d = get_3dprops(study_path)
+    static3d, dynamic3d = get_3dprops(realizations, storage)
     
     now = datetime.now()
     timestamp = datetime.timestamp(now)
     dt_ext = str(datetime.fromtimestamp(timestamp))
     
     # save results 
-    studies = u.read_json(study_path)
     studies["status"] = "extracted"
     studies["extraction"] = {}
     studies["extraction"]["timestamp"] = dt_ext

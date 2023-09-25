@@ -82,7 +82,7 @@ def dump_ensemble(data, real_files, root_datafile_path, json_path):
     timestamp = datetime.timestamp(now)
     dt_object = str(datetime.fromtimestamp(timestamp))
 
-    ens_path = os.path.join(STORAGE_DIR, data['Name'])
+    ens_path = os.path.join(STORAGE_DIR, 'BASE_' + data['Name'])
     
     study = {'status':"created",
              'Name': data['Name'],
