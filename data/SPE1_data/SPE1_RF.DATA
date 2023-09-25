@@ -27,7 +27,7 @@ DIMENS
    10 10 3 /
 
 -- The number of equilibration regions is inferred from the EQLDIMS
--- keyword.
+-- keyword
 EQLDIMS
 /
 
@@ -291,6 +291,22 @@ SUMMARY
 -- 1a) Oil rate vs time
 FOPR
 -- Field Oil Production Rate
+
+-- 1a) Oil rate vs time
+FWPR
+-- Field Water Production Rate
+
+-- 1a) Oil rate vs time
+FGPR
+-- Field Water Production Rate
+
+-- 1a) Oil rate vs time
+FGIR
+-- Field Water Production Rate
+
+-- 1a) Oil rate vs time
+FWIR
+-- Field Water Production Rate
 
 -- 1b) GOR vs time
 WGOR

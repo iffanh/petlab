@@ -287,11 +287,28 @@ SUMMARY
 FOPR
 -- Field Oil Production Rate
 
+-- 1a) Oil rate vs time
+FWPR
+-- Field Water Production Rate
+
+-- 1a) Oil rate vs time
+FGPR
+-- Field Water Production Rate
+
+-- 1a) Oil rate vs time
+FGIR
+-- Field Water Production Rate
+
+-- 1a) Oil rate vs time
+FWIR
+-- Field Water Production Rate
+
 -- 1b) GOR vs time
 WGOR
 -- Well Gas-Oil Ratio
    'PROD'
 /
+
 -- Using FGOR instead of WGOR:PROD results in the same graph
 FGOR
 
