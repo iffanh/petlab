@@ -2,7 +2,57 @@ import json
 import numpy as np
 import scipy.stats
 import gstools as gs
+from functools import lru_cache, wraps
 
+def hashable_lru(func):
+    cache = lru_cache(maxsize=1024)
+
+    def deserialise(value):
+        try:
+            return json.loads(value)
+        except Exception:
+            return value
+
+    def func_with_serialized_params(*args, **kwargs):
+        _args = tuple([deserialise(arg) for arg in args])
+        _kwargs = {k: deserialise(v) for k, v in kwargs.items()}
+        return func(*_args, **_kwargs)
+
+    cached_function = cache(func_with_serialized_params)
+
+    @wraps(func)
+    def lru_decorator(*args, **kwargs):
+        _args = tuple([json.dumps(arg, sort_keys=True) if type(arg) in (list, dict) else arg for arg in args])
+        _kwargs = {k: json.dumps(v, sort_keys=True) if type(v) in (list, dict) else v for k, v in kwargs.items()}
+        return cached_function(*_args, **_kwargs)
+    lru_decorator.cache_info = cached_function.cache_info
+    lru_decorator.cache_clear = cached_function.cache_clear
+    return lru_decorator
+
+def np_cache(function):
+    @lru_cache
+    def cached_wrapper(*args, **kwargs):
+
+        args = [np.array(a) if isinstance(a, tuple) else a for a in args]
+        kwargs = {
+            k: np.array(v) if isinstance(v, tuple) else v for k, v in kwargs.items()
+        }
+
+        return function(*args, **kwargs)
+
+    @wraps(function)
+    def wrapper(*args, **kwargs):
+        args = [tuple(a) if isinstance(a, np.ndarray) else a for a in args]
+        kwargs = {
+            k: tuple(v) if isinstance(v, np.ndarray) else v for k, v in kwargs.items()
+        }
+        return cached_wrapper(*args, **kwargs)
+
+    wrapper.cache_info = cached_wrapper.cache_info
+    wrapper.cache_clear = cached_wrapper.cache_clear
+
+    return wrapper
+    
 def read_json(jsonfilename):
     with open(jsonfilename, 'r') as j:
         jsondata = json.loads(j.read())
@@ -97,3 +147,4 @@ def replace_random_field(d:dict):
             replaced_value += '%s '%int(v)
     
     return replaced_value
+
