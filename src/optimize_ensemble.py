@@ -7,42 +7,12 @@ import extract_ensemble
 import py_trsqp.trsqp as trsqp
 
 import os
-import scipy.stats
+from datetime import datetime
 
 from pathlib import Path
 
 STORAGE_DIR = './simulations/storage/'
 STUDIES_DIR = './simulations/studies/'
-
-def replace_single_value(d):
-    
-    p = d["parameters"]
-    if d["name"] == 'Normal':
-            
-        a = (p['min'] - p['mean']) / p['std']
-        b = (p['max'] - p['mean']) / p['std']
-        sample = scipy.stats.truncnorm.rvs(a, b)
-        sample = sample*p['std'] + p['mean']
-
-    elif d["name"] == 'LogNormal':
-        
-        a = (np.log(p['min']) - np.log(p['mean'])) / np.log(p['std'])
-        b = (np.log(p['max']) - np.log(p['mean'])) / np.log(p['std'])
-        sample = scipy.stats.truncnorm.rvs(a, b)
-        sample = np.exp(sample*np.log(p['std']) + np.log(p['mean']))
-
-    elif d["name"] == 'Constant':
-        sample = p['value']
-
-    else:
-        raise ValueError("%s distribution not implemented yet" %d["name"])
-
-    if p['type'] == "float":
-        replaced_value = '%.3f'%sample
-    elif p['type'] == "int":
-        replaced_value = '%s'%int(sample)
-            
-    return replaced_value
 
 def mutate_case(root_datafile_path, real_datafile_path, parameters, optimization):
 
@@ -57,7 +27,7 @@ def mutate_case(root_datafile_path, real_datafile_path, parameters, optimization
         d = param["Distribution"]
         
         if Type == "SingleValue":
-            replaced_value = replace_single_value(d)
+            replaced_value = u.replace_single_value(d)
             
         filedata = filedata.replace(Name, replaced_value)
 
@@ -272,13 +242,21 @@ def formulate_problem(study):
     
     return study
 
+def calc_stats(vec:np.ndarray, stats_type:str, *args):
+    
+    if stats_type == "average":
+        r = np.mean(vec)
+    elif stats_type == "percentile":
+        r = np.percentile(vec, args[0])
+    
+    return r
+
+@u.np_cache
 def cost_function(x, study_path, simulator_path):
     
     study = u.read_json(study_path)
-    
     config = u.read_json(study['creation']['json'])
     controls = config['controls']
-    
     
     for i, control in enumerate(controls):
         control["Default"] = x[i]
@@ -287,7 +265,7 @@ def cost_function(x, study_path, simulator_path):
     try:
         run_ensemble.run_cases(simulator_path, study, simfolder_path, controls)
     except RuntimeError:
-        return -np.nan
+        return (-np.nan, np.nan, np.nan)
     
     realizations = study['extension']['realizations'] 
     storage = study['extension']['storage']
@@ -296,15 +274,70 @@ def cost_function(x, study_path, simulator_path):
     
     u.save_to_json(study_path, study)
     
-    # get npv
-    unit = get_unit(study)
-    study = calculate_npv(study, unit, summary)
-    npv_path = study['extension']['optimization']['NPV']
-    npv_arr = np.load(npv_path)
-    npv_T = np.cumsum(npv_arr, axis=1)[:,-1]
-    npv_cf = np.mean(npv_T, axis=0)
+    # cost functions
+    cf_type = config['optimization']['parameters']['costFunction'] 
+    if cf_type == "NPV":
+        # get npv
+        unit = get_unit(study)
+        study = calculate_npv(study, unit, summary)
+        npv_path = study['extension']['optimization']['NPV']
+        npv_arr = np.load(npv_path)
+        npv_T = np.cumsum(npv_arr, axis=1)[:,-1]
+        npv_cf = np.mean(npv_T, axis=0)
+        
+    else:
+        raise NotImplementedError(f"Cost function of type {cf_type} has not been implemented yet.")
+        
+    eqs = []
+    ineqs = []
+    # constraints
+    constraints = config['optimization']['parameters']['constraints']
+    for c, d in constraints.items():
+        
+        if not d['is_active']:
+            continue 
+        
+        summary = study['extension']['optimization']['summary']
+        if c == "FWPT":
+            fwpts = []
+            for casename in summary.keys():  
+                fwpt = np.load(summary[casename]['FWPT'])[-1]
+                fwpts.append(fwpt)
+                
+            val = calc_stats(fwpts, d['robustness']['type'], d['robustness']['value'])
+            val = (val - d['value'])/abs(d['value'])
+            
+        elif c == "FGPT":
+            fgpts = []
+            for casename in summary.keys():  
+                fgpt = np.load(summary[casename]['FGPT'])[-1]
+                fgpts.append(fgpt)
+                
+            val = calc_stats(fgpts, d['robustness']['type'], d['robustness']['value'])
+            val = (val - d['value'])/abs(d['value'])
+        
+        else:
+            raise NotImplementedError(f"Constraints of type {c} has not been implemented yet.")
+        
+        if d['type'] == "inequality":
+            ineqs.append(-val)
+        elif d['type'] == "equality":
+            eqs.append(-val)
+    
+    results = (-npv_cf, eqs, ineqs)
+    return results
 
-    return -npv_cf
+def get_n_constraints(constraints:dict):
+    
+    n_eq = 0
+    n_ineq = 0
+    for c, d in constraints.items():
+        if d['type'] == 'inequality':
+            n_ineq += 1
+        elif d['type'] == 'equality':
+            n_eq += 1
+    
+    return n_eq, n_ineq
 
 def run_optimization(study_path, simulator_path):
     
@@ -316,18 +349,25 @@ def run_optimization(study_path, simulator_path):
     Nc = len(controls)
     x0 = [c["Default"] for c in controls]
     
+    constraints = config['optimization']['parameters']['constraints']
+    n_eq, n_ineq = get_n_constraints(constraints)
+    
     # define cost function
-    cf = lambda x, study_path=study_path, simulator_path=simulator_path: cost_function(x, study_path, simulator_path)
+    cf = lambda x, study_path=study_path, simulator_path=simulator_path: cost_function(x, study_path, simulator_path)[0]
+    eqs = [lambda x, study_path=study_path, simulator_path=simulator_path, i=i: cost_function(x, study_path, simulator_path)[1][i] for i in range(n_eq)]
+    ineqs = [lambda x, study_path=study_path, simulator_path=simulator_path, i=i: cost_function(x, study_path, simulator_path)[2][i] for i in range(n_ineq)]
+      
+    # redefine constants
+    opt_constants = config['optimization']['parameters']['constants']
     
-    
-    CONSTANTS = {}
-    CONSTANTS['L_threshold'] = 1.00
     tr = trsqp.TrustRegionSQPFilter(x0, 
                                     k=2*Nc+1,
                                     cf=cf,
-                                    constants=CONSTANTS)
+                                    eqcs=[*eqs],
+                                    ineqcs=[*ineqs],
+                                    constants=opt_constants)
     
-    tr.optimize(max_iter=5)
+    tr.optimize(max_iter=config['optimization']['parameters']['maxIter'])
     
     return
 
@@ -337,6 +377,7 @@ def main(args):
     study_path = args[1]
     study = u.read_json(study_path)   
     
+    
     ext_dict = create_extension_folders(study)
     study['extension'] = ext_dict
     u.save_to_json(study_path, study)
@@ -344,9 +385,17 @@ def main(args):
     study = formulate_problem(study)
     u.save_to_json(study_path, study)
     
-    
+    now = datetime.now()
+    timestamp = datetime.timestamp(now)
+    dt_start = str(datetime.fromtimestamp(timestamp))
+    study['extension']['start'] = dt_start
     run_optimization(study_path, simulator_path)
+    now = datetime.now()
+    timestamp = datetime.timestamp(now)
+    dt_end = str(datetime.fromtimestamp(timestamp))
+    study['extension']['end'] = dt_end
     
+    study['status'] = "optimized"
     
     return
 
