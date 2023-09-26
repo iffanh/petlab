@@ -303,6 +303,26 @@ FGIR
 FWIR
 -- Field Water Production Rate
 
+-- 1a) Oil rate vs time
+FOPT
+-- Field Oil Production Rate
+
+-- 1a) Oil rate vs time
+FWPT
+-- Field Water Production Rate
+
+-- 1a) Oil rate vs time
+FGPT
+-- Field Water Production Rate
+
+-- 1a) Oil rate vs time
+FGIT
+-- Field Water Production Rate
+
+-- 1a) Oil rate vs time
+FWIT
+-- Field Water Production Rate
+
 -- 1b) GOR vs time
 WGOR
 -- Well Gas-Oil Ratio
