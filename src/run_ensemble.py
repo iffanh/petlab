@@ -29,7 +29,7 @@ def change_control(base_datafile_path, real_datafile_path, controls):
     with open(real_datafile_path, 'w') as file:
         file.write(filedata)
 
-def run_case(simulator_path, real_name, real_path):
+def simulate_case(simulator_path, real_name, real_path):
 
     command = [simulator_path, real_path]
     process = subprocess.Popen(command, stdout=subprocess.PIPE)
@@ -43,10 +43,12 @@ def run_case(simulator_path, real_name, real_path):
     else: 
         # print("%s ran successfully" %real_name)
         pass
+    
+def run_case(base_datafile_path, real_datafile_path, controls, simulator_path, real_name):
+    change_control(base_datafile_path, real_datafile_path, controls)
+    simulate_case(simulator_path, real_name, real_datafile_path)
 
 def run_cases(simulator_path, study, simfolder_path, controls):
-    
-    # config = u.read_json(study['creation']['json'])
     
     _, tail = os.path.split(study['creation']['root']) # dir_path = /path/to/data
     root_name = os.path.splitext(tail)[0] #root_name = SPE1
@@ -55,8 +57,6 @@ def run_cases(simulator_path, study, simfolder_path, controls):
 
     realizations = {}
     l = len(base_realizations)
-    # u.printProgressBar(0, l, prefix = 'Progress:', suffix = 'Complete', length = 50)
-
     for i, real_name in tqdm(enumerate(base_realizations.keys()), total=l, desc="Simulation: "):
         
         real_name = root_name + '_%s'%(i+1) # SPE1_i
@@ -65,10 +65,8 @@ def run_cases(simulator_path, study, simfolder_path, controls):
         Path(real_path).mkdir(parents=True, exist_ok=True)
 
         real_datafile_path = os.path.join(real_path, real_name + '.DATA') # /path/to/data/SPE1_i/SPE1_i.DATA
-    
-        change_control(base_realizations[real_name], real_datafile_path, controls)
-        run_case(simulator_path, real_name, real_datafile_path)
-        
+        base_datafile_path = base_realizations[real_name]
+        run_case(base_datafile_path, real_datafile_path, controls, simulator_path, real_name)
         realizations[real_name] = real_datafile_path
         
     return realizations
