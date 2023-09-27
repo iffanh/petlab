@@ -124,6 +124,11 @@ def get_3dprops(realizations, storage):
             except:
                 static3d_dict[casename] = {}
             
+            real_path = realizations[casename]
+            dirname = os.path.dirname(real_path)
+            static3d_path = os.path.join(dirname, casename + ".INIT")
+            static3d = ecl.eclfile.EclFile(static3d_path)
+    
             vector = static3d[k][0].numpy_view()
         
             real_dir = os.path.join(data_dir, casename)
@@ -135,6 +140,10 @@ def get_3dprops(realizations, storage):
             static3d_dict[casename][f"{k}"] = filename
     
     
+    cs = list(realizations.keys())[0]
+    # for casename in realizations:
+    real_path = realizations[cs]
+    dirname = os.path.dirname(real_path)
     # Save dynamic
     dynamic3d_path = os.path.join(dirname, cs + ".UNRST")
     dynamic3d = ecl.eclfile.EclFile(dynamic3d_path)
@@ -151,10 +160,14 @@ def get_3dprops(realizations, storage):
     dynamic3d_dict = {}
     for k in dynamic_available_keys:
         for casename in realizations:
-            
+            real_path = realizations[casename]
+            dirname = os.path.dirname(real_path)
             real_dir = os.path.join(data_dir, casename)
             Path(real_dir).mkdir(parents=True, exist_ok=True)
             
+            dynamic3d_path = os.path.join(dirname, casename + ".UNRST")
+            dynamic3d = ecl.eclfile.EclFile(dynamic3d_path)
+    
             try:
                 tmp = dynamic3d_dict[casename]
             except:

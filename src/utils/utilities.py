@@ -4,6 +4,8 @@ import scipy.stats
 import gstools as gs
 from functools import lru_cache, wraps
 
+import scipy.interpolate as interp
+
 def hashable_lru(func):
     cache = lru_cache(maxsize=1024)
 
@@ -53,6 +55,12 @@ def np_cache(function):
 
     return wrapper
     
+def resample(base_date, custom_date, data):
+    
+    f = interp.interp1d(custom_date, data)
+    new_data = f(base_date)
+    return new_data
+
 def read_json(jsonfilename):
     with open(jsonfilename, 'r') as j:
         jsondata = json.loads(j.read())
