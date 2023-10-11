@@ -1,8 +1,8 @@
 {
-    "Name": "IE_PoroPerm2_RF",
-    "Ne": 60,
-    "n_parallel": 4,
+    "Name": "IE_PoroPerm2_PG8607",
+    "Ne": 5,
     "root": "./data/SPE1_data/SPE1_RF.DATA",
+    "n_parallel": 4,
     "parameters":
         [{
              "Name": "$POROSITY", 
@@ -67,104 +67,7 @@
                         "max": 400,
                         "type": "float"}
             }
-         },
-         {
-            "Name": "$PERMY1",
-            "Type": "RandomField",
-            "Distribution": {
-               "name": "LogNormal",
-               "size": [10, 10, 1],
-               "scale": [4, 4, 2],
-               "angles": 0,
-               "parameters": {
-                       "mean": 500, 
-                       "std": 100,
-                       "min": 400, 
-                       "max": 650,
-                       "type": "float"}
-           }
-        },
-        {
-           "Name": "$PERMY2",
-           "Type": "RandomField",
-           "Distribution": {
-               "name": "LogNormal",
-               "size": [10, 10, 1],
-               "scale": [4, 4, 2],
-               "angles": 0,
-               "parameters": {
-                       "mean": 50,  
-                       "std": 10,
-                       "min": 0.1, 
-                       "max": 100,
-                       "type": "float"}
-           }
-        },
-        {
-           "Name": "$PERMY3",
-           "Type": "RandomField",
-           "Distribution": {
-               "name": "LogNormal",
-               "size": [10, 10, 1],
-               "scale": [4, 4, 2],
-               "angles": 0,
-               "parameters": {
-                       "mean": 200, 
-                       "std": 40,
-                       "min": 20, 
-                       "max": 400,
-                       "type": "float"}
-           }
-        },
-        {
-         "Name": "$PERMZ1",
-         "Type": "RandomField",
-         "Distribution": {
-            "name": "LogNormal",
-            "size": [10, 10, 1],
-            "scale": [4, 4, 2],
-            "angles": 0,
-            "parameters": {
-                    "mean": 50, 
-                    "std": 10,
-                    "min": 40, 
-                    "max": 65,
-                    "type": "float"}
-        }
-         },
-         {
-            "Name": "$PERMZ2",
-            "Type": "RandomField",
-            "Distribution": {
-                  "name": "LogNormal",
-                  "size": [10, 10, 1],
-                  "scale": [4, 4, 2],
-                  "angles": 0,
-                  "parameters": {
-                        "mean": 5,  
-                        "std": 1.2,
-                        "min": 0.1, 
-                        "max": 10,
-                        "type": "float"}
-            }
-         },
-         {
-            "Name": "$PERMZ3",
-            "Type": "RandomField",
-            "Distribution": {
-                  "name": "LogNormal",
-                  "size": [10, 10, 1],
-                  "scale": [4, 4, 2],
-                  "angles": 0,
-                  "parameters": {
-                        "mean": 20, 
-                        "std": 4,
-                        "min": 2, 
-                        "max": 40,
-                        "type": "float"}
-            }
-         }
-      ],
+         }],
    "controls":
             [
                {

@@ -1,0 +1,126 @@
+{
+    "Name": "IE_Egg",
+    "Ne": 5,
+    "n_parallel": 4,
+    "root": "./EggModel/data/Egg_Model_Data_Files_v2/Eclipse/EGG.DATA",
+    "parameters":
+        [
+         {
+             "Name": "$PERMREAL", 
+             "Type": "FixedFile",
+             "Distribution": {
+                "parameters": {
+                        "prefix": "../../../../EggModel/data/Egg_Model_Data_Files_v2/Permeability_Realizations/PERM",
+                        "suffix": "_ECL.INC"    
+                    }
+            }
+         }
+         ],
+   "controls": 
+        [
+            {
+                "Name": "$PROD1BHP",
+                "Default": 395,
+                "type": "float"
+            },
+            {
+                "Name": "$PROD2BHP",
+                "Default": 395,
+                "type": "float"
+            },
+            {
+                "Name": "$PROD3BHP",
+                "Default": 395,
+                "type": "float"
+            },
+            {
+                "Name": "$PROD4BHP",
+                "Default": 395,
+                "type": "float"
+            },
+            {
+                "Name": "$INJECT1RATE",
+                "Default": 79.5,
+                "type": "float"
+            },
+            {
+                "Name": "$INJECT2RATE",
+                "Default": 79.5,
+                "type": "float"
+            },
+            {
+                "Name": "$INJECT3RATE",
+                "Default": 79.5,
+                "type": "float"
+            },
+            {
+                "Name": "$INJECT4RATE",
+                "Default": 79.5,
+                "type": "float"
+            },
+            {
+                "Name": "$INJECT5RATE",
+                "Default": 79.5,
+                "type": "float"
+            },
+            {
+                "Name": "$INJECT6RATE",
+                "Default": 79.5,
+                "type": "float"
+            },
+            {
+                "Name": "$INJECT7RATE",
+                "Default": 79.5,
+                "type": "float"
+            },
+            {
+                "Name": "$INJECT8RATE",
+                "Default": 79.5,
+                "type": "float"
+            }
+        ],
+   "optimization": 
+        {
+            "parameters": 
+            {
+                "maxIter": 20,
+                "costFunction": "NPV",
+                "constraints": {
+                    "FWPT": {
+                        "is_active": false,
+                        "value": 12000,
+                        "type": "inequality",
+                        "robustness": {
+                            "type": "percentile",
+                            "value": 95
+                        }
+                    },
+                    "FGPT": {
+                        "is_active": false,
+                        "value": 250E+6,
+                        "type": "inequality",
+                        "robustness": {
+                            "type": "percentile",
+                            "value": 95
+                        }
+                    }
+                },
+                "constants": {
+                        "gamma_0": 0.5,
+                        "gamma_1": 0.8,
+                        "gamma_2": 1.5,
+                        "eta_1": 0.0001,
+                        "eta_2": 0.01,
+                        "mu": 0.01,
+                        "gamma_vartheta": 0.1,
+                        "kappa_vartheta": 0.0001,
+                        "kappa_radius": 0.8,
+                        "kappa_mu": 10,
+                        "kappa_tmd": 0.01,
+                        "init_radius": 0.2,
+                        "stopping_radius": 0.001,
+                        "L_threshold": 1.0
+                    }
+            }
+        }
+}

@@ -1,6 +1,7 @@
 {
     "Name": "IE_PoroPerm2_SV",
     "Ne": 5,
+    "n_parallel": 4,
     "root": "./data/SPE1_data/SPE1_SV.DATA",
     "parameters":
         [{
@@ -88,7 +89,7 @@
                   "costFunction": "NPV",
                   "constraints": {
                      "FWPT": {
-                         "is_active": true,
+                         "is_active": false,
                          "value": 12000,
                          "type": "inequality",
                          "robustness": {
@@ -97,7 +98,7 @@
                          }
                      },
                      "FGPT": {
-                         "is_active": true,
+                         "is_active": false,
                          "value": 250E+6,
                          "type": "inequality",
                          "robustness": {
