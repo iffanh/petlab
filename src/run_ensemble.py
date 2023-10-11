@@ -6,6 +6,7 @@ import utils.utilities as u
 from datetime import datetime
 from pathlib import Path
 
+
 STORAGE_DIR = './simulations/storage/'
 STUDIES_DIR = './simulations/studies/'
 
@@ -30,34 +31,26 @@ def change_control(base_datafile_path, real_datafile_path, controls):
         file.write(filedata)
 
 def simulate_case(simulator_path, real_name, real_path):
-
-    command = [simulator_path, real_path]
-    process = subprocess.Popen(command, stdout=subprocess.PIPE)
-
-    out = process.stdout
-
-    result = process.wait()
-
-    if result:
-        raise RuntimeError("%s failed to run" %real_path)
-    else: 
-        # print("%s ran successfully" %real_name)
-        pass
+    command = [simulator_path, '--enable-terminal-output=false', real_path]
+    
+    return command
     
 def run_case(base_datafile_path, real_datafile_path, controls, simulator_path, real_name):
     change_control(base_datafile_path, real_datafile_path, controls)
-    simulate_case(simulator_path, real_name, real_datafile_path)
+    command = simulate_case(simulator_path, real_name, real_datafile_path)
+    return command
 
-def run_cases(simulator_path, study, simfolder_path, controls):
+def run_cases(simulator_path, study, simfolder_path, controls, n_parallel):
     
     _, tail = os.path.split(study['creation']['root']) # dir_path = /path/to/data
     root_name = os.path.splitext(tail)[0] #root_name = SPE1
     
     base_realizations = study['creation']['base_realizations']
 
+    commands = []
     realizations = {}
     l = len(base_realizations)
-    for i, real_name in tqdm(enumerate(base_realizations.keys()), total=l, desc="Simulation: "):
+    for i, real_name in tqdm(enumerate(base_realizations.keys()), total=l, desc="Preparing: "):
         
         real_name = root_name + '_%s'%(i+1) # SPE1_i
         
@@ -66,9 +59,11 @@ def run_cases(simulator_path, study, simfolder_path, controls):
 
         real_datafile_path = os.path.join(real_path, real_name + '.DATA') # /path/to/data/SPE1_i/SPE1_i.DATA
         base_datafile_path = base_realizations[real_name]
-        run_case(base_datafile_path, real_datafile_path, controls, simulator_path, real_name)
+        command = run_case(base_datafile_path, real_datafile_path, controls, simulator_path, real_name)
+        commands.append(command)
         realizations[real_name] = real_datafile_path
         
+    u.run_bash_commands_in_parallel(commands, max_tries=1, n_parallel=n_parallel)
     return realizations
         
 def main(argv):
@@ -90,7 +85,7 @@ def main(argv):
     Path(simfolder_path).mkdir(parents=True, exist_ok=True)
     
     config = u.read_json(study['creation']['json'])
-    realizations = run_cases(simulator_path, study, simfolder_path, config['controls'])
+    realizations = run_cases(simulator_path, study, simfolder_path, config['controls'], n_parallel=config['n_parallel'])
     now = datetime.now()
     timestamp = datetime.timestamp(now)
     dt_end = str(datetime.fromtimestamp(timestamp))

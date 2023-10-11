@@ -3,9 +3,57 @@ import numpy as np
 import scipy.stats
 import gstools as gs
 from functools import lru_cache, wraps
+from subprocess import DEVNULL, STDOUT, check_call
 
 import scipy.interpolate as interp
 
+import subprocess
+import time
+from collections import deque
+
+
+def run_bash_commands_in_parallel(commands, max_tries, n_parallel):
+    """
+    Run a list of bash commands in parallel with maximum number of processes
+    https://stackoverflow.com/questions/69009892/python-run-multiple-subprocesses-in-parallel-but-allow-to-retry-when-a-bash-co
+    """
+    # we use a tuple of (command, tries) to store the information
+    # how often a command was already tried.
+    waiting = deque([(command, 1) for command in commands])
+    running = deque()
+
+    while len(waiting) > 0 or len(running) > 0:
+        # print(f'Running: {len(running)}, Waiting: {len(waiting)}')
+
+        # if less than n_parallel jobs are running and we have waiting jobs,
+        # start new jobs
+        while len(waiting) > 0 and len(running) < n_parallel:
+            command, tries = waiting.popleft()
+            try:
+                running.append((subprocess.Popen(command, stdout=DEVNULL), command, tries))
+                print(f"Started task {command}. Running: {len(running)}, Waiting: {len(waiting)}")
+            except OSError:
+                print(f'Failed to start command {command}')
+
+        # poll running commands
+        for _ in range(len(running)):
+            process, command, tries = running.popleft()
+            ret = process.poll()
+            if ret is None:
+                running.append((process, command, tries))
+            # retry errored jobs
+            elif ret != 0:
+                if tries < max_tries:
+                    waiting.append((command, tries  + 1))
+                else:
+                    print(f'Command: {command} errored after {max_tries} tries')
+            else:
+                print(f'Command {command} finished successfully')
+
+        # sleep a bit to reduce CPU usage
+        time.sleep(0.5)
+    print('All tasks done')
+    
 def hashable_lru(func):
     cache = lru_cache(maxsize=1024)
 
@@ -95,7 +143,7 @@ def replace_single_value(d:dict):
         raise ValueError("%s distribution not implemented yet" %d["name"])
 
     if p['type'] == "float":
-        replaced_value = '%.3f'%sample
+        replaced_value = '%.5f'%sample
     elif p['type'] == "int":
         replaced_value = '%s'%int(sample)
             
@@ -156,3 +204,9 @@ def replace_random_field(d:dict):
     
     return replaced_value
 
+def replace_fixed_value(d:dict, case_number:int):
+    p = d["parameters"]
+    prefix = p['prefix'] 
+    suffix = p['suffix']
+    replaced_value = "'"+str(prefix + str(case_number) + suffix)+"'"
+    return replaced_value

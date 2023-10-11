@@ -208,9 +208,11 @@ def calculate_npv(study, unit, summary_folder):
             tm = tM*tn/tN
             w1 = tm - np.floor(tm)
             w2 = np.ceil(tm) - tm
-            npv_t = (w1*cashflow[int(np.floor(tm))] + w2*cashflow[int(np.ceil(tm))])/(1+d)**tm
+            if w1 == 0.0:
+                npv_t = cashflow[int(np.floor(tm))]/(1+d)**tm
+            else:
+                npv_t = (w1*cashflow[int(np.floor(tm))] + w2*cashflow[int(np.ceil(tm))])/(1+d)**tm
             npv.append(npv_t)
-            
         npv_arr.append(npv)
         
     npv_arr = np.array(npv_arr).T
@@ -263,7 +265,7 @@ def cost_function(x, study_path, simulator_path):
     
     simfolder_path = study['extension']['storage']
     try:
-        run_ensemble.run_cases(simulator_path, study, simfolder_path, controls)
+        run_ensemble.run_cases(simulator_path, study, simfolder_path, controls, n_parallel=config['n_parallel'])
     except RuntimeError:
         return (-np.nan, np.nan, np.nan)
     
@@ -325,6 +327,7 @@ def cost_function(x, study_path, simulator_path):
             eqs.append(-val)
     
     results = (-npv_cf, eqs, ineqs)
+    print(f"results = {results}")
     return results
 
 def get_n_constraints(constraints:dict):
@@ -332,10 +335,11 @@ def get_n_constraints(constraints:dict):
     n_eq = 0
     n_ineq = 0
     for c, d in constraints.items():
-        if d['type'] == 'inequality':
-            n_ineq += 1
-        elif d['type'] == 'equality':
-            n_eq += 1
+        if d['is_active']:
+            if d['type'] == 'inequality':
+                n_ineq += 1
+            elif d['type'] == 'equality':
+                n_eq += 1
     
     return n_eq, n_ineq
 
@@ -376,8 +380,7 @@ def main(args):
     simulator_path = args[0]
     study_path = args[1]
     study = u.read_json(study_path)   
-    
-    
+        
     ext_dict = create_extension_folders(study)
     study['extension'] = ext_dict
     u.save_to_json(study_path, study)

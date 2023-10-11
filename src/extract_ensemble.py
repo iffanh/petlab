@@ -60,6 +60,10 @@ def get_summary(realizations, storage):
     casename = list(realizations.keys())[0]
     # for casename in realizations:
     real_path = realizations[casename]
+    
+    # dirname = os.path.dirname(real_path)
+    # summary_path = os.path.join(dirname, casename + ".SMSPEC")
+    
     summary = EclSum(real_path)
     
     summary_keys = summary.keys()

@@ -6,6 +6,7 @@ from datetime import datetime
 import utils.utilities as u
 import sys
 import os
+from tqdm import tqdm
 
 from pathlib import Path
 
@@ -14,13 +15,13 @@ STUDIES_DIR = './simulations/studies/'
 Path(STORAGE_DIR).mkdir(parents=True, exist_ok=True)
 Path(STUDIES_DIR).mkdir(parents=True, exist_ok=True)
 
-def mutate_case(root_datafile_path, real_datafile_path, parameters):
+def mutate_case(root_datafile_path, real_datafile_path, parameters, case_number):
 
     with open(root_datafile_path, 'r') as file :
         filedata = file.read()
 
     # parameters
-    for param in parameters:
+    for param in tqdm(parameters, total=len(parameters), leave=True, desc="Populating properties: "):
         
         Name = param["Name"]
         Type = param["Type"]
@@ -28,21 +29,14 @@ def mutate_case(root_datafile_path, real_datafile_path, parameters):
         
         if Type == "SingleValue":
             replaced_value = u.replace_single_value(d)
-        if Type == "RandomField":
+        elif Type == "RandomField":
             replaced_value = u.replace_random_field(d)
+        elif Type == "FixedFile":
+            replaced_value = u.replace_fixed_value(d, case_number)
+        else:
+            raise NotImplementedError(f"Distribution type {Type} is not recognized.")
             
         filedata = filedata.replace(Name, replaced_value)
-
-    # # optimization
-    # for optim in optimization:
-    #     Name = optim["Name"]
-    #     Default = optim["Default"]
-    #     if optim['type'] == "float":
-    #         replaced_value = '%.3f '%Default
-    #     elif optim['type'] == "int":
-    #         replaced_value = '%s '%int(Default)
-            
-    #     filedata = filedata.replace(Name, replaced_value)
 
     # Write the file out again
     with open(real_datafile_path, 'w') as file:
@@ -58,7 +52,7 @@ def mutate_cases(data, root_datafile_path):
     Path(base_ens_path).mkdir(parents=True, exist_ok=True)
 
     real_files = {}
-    for i in range(1, data['Ne']+1):
+    for i in tqdm(range(1, data['Ne']+1), total=data['Ne'], desc="Case: "):
         real_name = root_name + '_%s'%i # SPE1_i
         
         real_path = os.path.join(base_ens_path, real_name) # /path/to/data/SPE1_i
@@ -66,7 +60,7 @@ def mutate_cases(data, root_datafile_path):
 
         real_datafile_path = os.path.join(real_path, real_name + '.DATA') # /path/to/data/SPE1_i/SPE1_i.DATA
         
-        mutate_case(root_datafile_path, real_datafile_path, data['parameters'])
+        mutate_case(root_datafile_path, real_datafile_path, data['parameters'], i)
 
         real_files[real_name] = real_datafile_path
 
