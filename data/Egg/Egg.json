@@ -7,7 +7,7 @@
         [
          {
              "Name": "$PERMREAL", 
-             "Type": "FixedFile",
+             "Type": "IncrementalText",
              "Distribution": {
                 "parameters": {
                         "prefix": "../../../../EggModel/data/Egg_Model_Data_Files_v2/Permeability_Realizations/PERM",

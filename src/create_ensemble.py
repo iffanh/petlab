@@ -31,8 +31,10 @@ def mutate_case(root_datafile_path, real_datafile_path, parameters, case_number)
             replaced_value = u.replace_single_value(d)
         elif Type == "RandomField":
             replaced_value = u.replace_random_field(d)
-        elif Type == "FixedFile":
-            replaced_value = u.replace_fixed_value(d, case_number)
+        elif Type == "IncrementalText":
+            replaced_value = u.replace_incremental_text(d, case_number)
+        elif Type == "IncrementalValue":
+            replaced_value = u.replace_incremental_value(d, case_number)
         else:
             raise NotImplementedError(f"Distribution type {Type} is not recognized.")
             
@@ -66,9 +68,9 @@ def mutate_cases(data, root_datafile_path):
 
     return real_files
 
-def dump_ensemble(data, real_files, root_datafile_path, json_path):
+def dump_ensemble(config, real_files, root_datafile_path, json_path):
 
-    ensemble_study = os.path.join(STUDIES_DIR, '%s.json' %data['Name'])
+    ensemble_study = os.path.join(STUDIES_DIR, '%s.json' %config['Name'])
 
     # current date and time
     now = datetime.now()
@@ -76,13 +78,14 @@ def dump_ensemble(data, real_files, root_datafile_path, json_path):
     timestamp = datetime.timestamp(now)
     dt_object = str(datetime.fromtimestamp(timestamp))
 
-    ens_path = os.path.join(STORAGE_DIR, 'BASE_' + data['Name'])
+    ens_path = os.path.join(STORAGE_DIR, 'BASE_' + config['Name'])
     
     study = {'status':"created",
-             'Name': data['Name'],
+             'Name': config['Name'],
              'creation': {
                 'root': root_datafile_path,
                 'json': json_path,
+                'config': config,
                 'timestamp': dt_object,
                 'base_realizations': real_files,
                 'storage': ens_path}    
@@ -104,10 +107,9 @@ def main(argv):
     if not os.path.isfile(root_datafile_path):
         raise ValueError("%s cannot be found" %root_datafile_path)
 
-    data = u.read_json(json_path)
-    real_files = mutate_cases(data, root_datafile_path)
+    real_files = mutate_cases(config, root_datafile_path)
 
-    dump_ensemble(data, real_files, root_datafile_path, json_path)
+    dump_ensemble(config, real_files, root_datafile_path, json_path)
     
 if __name__ == "__main__":
     """The arguments are the following:

@@ -4,7 +4,8 @@
     "n_parallel": 4,
     "root": "./data/SPE1_data/SPE1_RF.DATA",
     "parameters":
-        [{
+        [
+         {
              "Name": "$POROSITY", 
              "Type": "RandomField",
              "Distribution": {
@@ -221,5 +222,24 @@
                            "L_threshold": 1.0
                        }
                   }
+            },
+   "historymatching":
+            {
+               "updatepath":"./data/SPE1_data/Posterior",
+               "model3d": 
+                  [
+                     "PORO", 
+                     "PERMX", 
+                     "PERMY", 
+                     "PERMZ"
+                  ],
+               "timestep": "./data/SPE1_data/History/SPE1_RF_3/summary/YEARS.npy",
+               "objectives":
+                  {
+                     "WBHP:INJ": "./data/SPE1_data/History/SPE1_RF_3/summary/WBHP:INJ.npy",
+                     "WBHP:PROD": "./data/SPE1_data/History/SPE1_RF_3/summary/WBHP:PROD.npy",
+                     "WOPR:PROD": "./data/SPE1_data/History/SPE1_RF_3/summary/WOPR:PROD.npy"
+                  }
             }
+            
 }

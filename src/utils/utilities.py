@@ -3,7 +3,7 @@ import numpy as np
 import scipy.stats
 import gstools as gs
 from functools import lru_cache, wraps
-from subprocess import DEVNULL, STDOUT, check_call
+from subprocess import DEVNULL
 
 import scipy.interpolate as interp
 
@@ -11,6 +11,7 @@ import subprocess
 import time
 from collections import deque
 
+import csv
 
 def run_bash_commands_in_parallel(commands, max_tries, n_parallel):
     """
@@ -197,16 +198,39 @@ def replace_random_field(d:dict):
     replaced_value = ''
     if p['type'] == "float":
         for v in var:
-            replaced_value += '%.3f '%v
+            replaced_value += '%.5f '%v
     elif p['type'] == "int":
         for v in var:
             replaced_value += '%s '%int(v)
     
     return replaced_value
 
-def replace_fixed_value(d:dict, case_number:int):
+def replace_incremental_text(d:dict, case_number:int):
     p = d["parameters"]
     prefix = p['prefix'] 
     suffix = p['suffix']
     replaced_value = "'"+str(prefix + str(case_number) + suffix)+"'"
+    return replaced_value
+
+def replace_incremental_value(d:dict, case_number:int):
+    
+    p = d["parameters"]
+    prefix = p['prefix'] 
+    suffix = p['suffix']
+    
+    # csv_file_path = str(prefix + str(case_number) + suffix)
+    
+    # with open(csv_file_path, 'r') as f:
+    #     reader = csv.reader(f)
+    #     rows = list(reader)
+    
+    # row = rows[0]
+    
+    file_path = str(prefix + str(case_number) + suffix)
+    
+    row = np.load(file_path)
+    replaced_value = ''
+    for v in row:
+        replaced_value += '%.5f '%float(v)
+    
     return replaced_value
