@@ -2,6 +2,7 @@ import numpy as np
 import utils.utilities as u
 import sys, os
 from datetime import datetime
+import math
 
 from sklearn.cross_decomposition import PLSRegression
 import chaospy
@@ -44,31 +45,38 @@ def get_summary(study_path:str) -> np.ndarray:
     first_realname = list(study['extraction']['summary'].keys())[0] 
     history_years = np.load(config['historymatching']['timestep'])
     
-    dsums = {}
-    for casename, _ in study['extraction']['summary'].items():
+    ofs = []
+    for kw in objectives.keys():
         base_years = np.load(study['extraction']['summary'][first_realname]['YEARS'])
-        dsums[casename] = []
         
-        for kw in objectives.keys():
-            sum_history = np.load(config['historymatching']['objectives'][kw])
-            sum_history = u.resample(base_years, history_years, sum_history)
+        sum_history = np.load(config['historymatching']['objectives'][kw])
+        sum_history = u.resample(base_years, history_years, sum_history)
+        
+        _dsums = []
+        for casename, _ in study['extraction']['summary'].items():
                         
             sum_simulation = np.load(study['extraction']['summary'][casename][kw])
             sum_years = np.load(study['extraction']['summary'][casename]['YEARS'])
             sum_simulation = u.resample(base_years, sum_years, sum_simulation)
         
             dsum = sum_history - sum_simulation
-            dsums[casename].extend(dsum)
+            _dsums.append(dsum)
         
-        dsums[casename] = np.array(dsums[casename])
+        _dsums = np.array(_dsums)
+        var = np.var(_dsums, axis=0)
+        
+        ind_feasible = var > 0.0 #avoid zero variance
+        dsums = np.nansum((_dsums**2)[:,ind_feasible]/var[ind_feasible], axis=1)
+        
+        ofs.append(dsums)
             
-    # calculate objective function
-    ofs = []
-    for i, (casename, _) in enumerate(study['extraction']['summary'].items()):
-        of = np.matmul(dsums[casename], dsums[casename])/len(dsums[casename])
-        ofs.append(of)
+    # # calculate objective function
+    # ofs = []
+    # for i, (casename, _) in enumerate(study['extraction']['summary'].items()):
+    #     of = np.matmul(dsums[casename], dsums[casename])/len(dsums[casename])
+    #     ofs.append(of)
         
-    ofs = np.log(np.array(ofs))
+    ofs = np.array(ofs).T
     
     return ofs
 
@@ -89,32 +97,38 @@ def run_history_matching(data:dict):
     static3d = data['static3d']
     ofs = data['ofs']
     plsr = PLSRegression(static3d.shape[1])
+   
     scoresX, scoresY = plsr.fit_transform(static3d, ofs)
     
-    N_comp = 5
-    distributions = []
-    for j in range(N_comp):
-        d = chaospy.GaussianKDE(scoresX[:,j])
-        distributions.append(d)
-        
-    J = chaospy.J(*distributions)
-    expansion = chaospy.generate_expansion(3, J, rule="cholesky")
-    nodes = scoresX[:,:N_comp].T
+    total_variance_in_x = np.sum(np.var(static3d, axis=0))
+    variance_in_x = np.var(plsr.x_scores_, axis=0)
+    fractions_of_explained_variance = variance_in_x/total_variance_in_x
+    fractions_of_explained_variance = fractions_of_explained_variance/np.sum(fractions_of_explained_variance)
+
+    n_component = [i for i, v in enumerate(np.cumsum(fractions_of_explained_variance)) if v > 0.75][0]
+
+    models = []
+    nodes = scoresX[:,:n_component].T
     weights = np.ones(len(ofs))
-    model = chaospy.fit_quadrature(expansion, nodes, weights, ofs)
-    
+    for j in range(n_component):
+        d = chaospy.GaussianKDE(scoresX[:,j])
+        expansion = chaospy.generate_expansion(4, d, rule="three_terms_recurrence")
+        model = chaospy.fit_quadrature(expansion, nodes, weights, ofs)
+        models.append(model)
+    model = lambda x: np.sum([fractions_of_explained_variance[i]*model(x[i]) for i, model in enumerate(models)])
+         
     min_bounds = np.min(nodes, axis=1)
     max_bounds = np.max(nodes, axis=1)
     bounds = [(a, b) for a, b in zip(min_bounds, max_bounds)]
     
-    x0 = np.zeros(N_comp)
+    x0 = np.mean(scoresX[:,:n_component], axis=0)
     def fun(x):
-        return model(*x)
+        return model(x)
 
     res = scipy.optimize.minimize(fun, x0, args=(), method=None, jac=None, hess=None, hessp=None, bounds=bounds, constraints=(), tol=None, callback=None, options=None)
     scoresX_post = scoresX*1
     
-    scoresX_post[:,:N_comp] = res.x
+    scoresX_post[:,:n_component] = res.x
 
     # Transform to the original space
     static3d_post, _ = plsr.inverse_transform(scoresX_post, scoresY)

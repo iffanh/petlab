@@ -118,7 +118,6 @@ def create_extension_folders(study):
     extension_dict['storage'] = opt_storage
     extension_dict['realizations'] = {}
     extension_dict['optimization'] = {}
-    extension_dict['historymatching'] = {}
     
     # copy the ensemble
     for i, real_name in enumerate(study['simulation']['realizations']):
@@ -399,6 +398,7 @@ def main(args):
     study['extension']['end'] = dt_end
     
     study['status'] = "optimized"
+    u.save_to_json(study_path, study)
     
     return
 

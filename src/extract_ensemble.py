@@ -8,6 +8,7 @@ import numpy as np
 import os
 from pathlib import Path
 from datetime import datetime
+from tqdm import tqdm
 
 class SummaryKeys():
     
@@ -50,10 +51,11 @@ class Static3DPropertyKeys():
 
 class Dynamic3DPropertyKeys():
     def __init__(self) -> None:
-        self.keys = ["PRESSURE",
-                     "SGAS",
-                     "SWAT",
-                     "RS"]
+        # self.keys = ["PRESSURE",
+        #              "SGAS",
+        #              "SWAT",
+        #              "RS"]
+        self.keys = []
         
 def get_summary(realizations, storage):
     
@@ -77,7 +79,9 @@ def get_summary(realizations, storage):
     Path(data_dir).mkdir(parents=True, exist_ok=True)
     
     summary_dict = {}
-    for k in available_keys:
+    pbar = tqdm(available_keys, total=len(available_keys), desc="Summary: ")
+    for k in pbar:
+        pbar.set_description(f"Extracting {k}")
         for casename in realizations:
             
             try:
@@ -120,7 +124,9 @@ def get_3dprops(realizations, storage):
     Path(data_dir).mkdir(parents=True, exist_ok=True)
     
     static3d_dict = {}
-    for k in static_available_keys:
+    pbar = tqdm(static_available_keys, total=len(static_available_keys), desc="Static3D: ")
+    for k in pbar:
+        pbar.set_description(f"Extracting {k}")
         for casename in realizations:
             
             try:
@@ -162,7 +168,9 @@ def get_3dprops(realizations, storage):
     Path(data_dir).mkdir(parents=True, exist_ok=True)
     
     dynamic3d_dict = {}
-    for k in dynamic_available_keys:
+    pbar = tqdm(dynamic_available_keys, total=len(dynamic_available_keys), desc="Dynamic3D: ")
+    for k in pbar:
+        pbar.set_description(f"Extracting {k}")
         for casename in realizations:
             real_path = realizations[casename]
             dirname = os.path.dirname(real_path)

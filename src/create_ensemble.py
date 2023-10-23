@@ -21,9 +21,11 @@ def mutate_case(root_datafile_path, real_datafile_path, parameters, case_number)
         filedata = file.read()
 
     # parameters
-    for param in tqdm(parameters, total=len(parameters), leave=True, desc="Populating properties: "):
+    pbar = tqdm(parameters, total=len(parameters), leave=False, desc="Populating properties: ")
+    for param in pbar:
         
         Name = param["Name"]
+        pbar.set_description(f"Populating {Name}")
         Type = param["Type"]
         d = param["Distribution"]
         
@@ -54,9 +56,11 @@ def mutate_cases(data, root_datafile_path):
     Path(base_ens_path).mkdir(parents=True, exist_ok=True)
 
     real_files = {}
-    for i in tqdm(range(1, data['Ne']+1), total=data['Ne'], desc="Case: "):
+    pbar = tqdm(range(1, data['Ne']+1), total=data['Ne'], desc="Case: ")
+    for i in pbar:
         real_name = root_name + '_%s'%i # SPE1_i
         
+        pbar.set_description(f'Case {real_name}')
         real_path = os.path.join(base_ens_path, real_name) # /path/to/data/SPE1_i
         Path(real_path).mkdir(parents=True, exist_ok=True)
 
@@ -65,6 +69,9 @@ def mutate_cases(data, root_datafile_path):
         mutate_case(root_datafile_path, real_datafile_path, data['parameters'], i)
 
         real_files[real_name] = real_datafile_path
+
+        if i == data['Ne']:
+            pbar.set_description(f'Properties populated')
 
     return real_files
 

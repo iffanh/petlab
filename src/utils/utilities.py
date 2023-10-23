@@ -10,6 +10,7 @@ import scipy.interpolate as interp
 import subprocess
 import time
 from collections import deque
+from tqdm import tqdm 
 
 import csv
 
@@ -23,6 +24,7 @@ def run_bash_commands_in_parallel(commands, max_tries, n_parallel):
     waiting = deque([(command, 1) for command in commands])
     running = deque()
 
+    pbar = tqdm(total=len(waiting))
     while len(waiting) > 0 or len(running) > 0:
         # print(f'Running: {len(running)}, Waiting: {len(waiting)}')
 
@@ -32,11 +34,12 @@ def run_bash_commands_in_parallel(commands, max_tries, n_parallel):
             command, tries = waiting.popleft()
             try:
                 running.append((subprocess.Popen(command, stdout=DEVNULL), command, tries))
-                print(f"Started task {command}. Running: {len(running)}, Waiting: {len(waiting)}")
+                # print(f"Started task {command}. Running: {len(running)}, Waiting: {len(waiting)}")
+                pbar.set_description(f"Running: {len(running)}, Waiting: {len(waiting)}")
             except OSError:
                 print(f'Failed to start command {command}')
 
-        # poll running commands
+        # poll running commands 
         for _ in range(len(running)):
             process, command, tries = running.popleft()
             ret = process.poll()
@@ -48,12 +51,15 @@ def run_bash_commands_in_parallel(commands, max_tries, n_parallel):
                     waiting.append((command, tries  + 1))
                 else:
                     print(f'Command: {command} errored after {max_tries} tries')
+                    pbar.update(1)
             else:
-                print(f'Command {command} finished successfully')
-
+                # print(f'Command {command} finished successfully')
+                pbar.update(1)
+                
         # sleep a bit to reduce CPU usage
         time.sleep(0.5)
-    print('All tasks done')
+    pbar.set_description(f'All simulation done')
+    pbar.close()
     
 def hashable_lru(func):
     cache = lru_cache(maxsize=1024)
