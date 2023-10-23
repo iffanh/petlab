@@ -214,7 +214,7 @@ def calculate_npv(study, unit, summary_folder):
             npv.append(npv_t)
         npv_arr.append(npv)
         
-    npv_arr = np.array(npv_arr).T
+    npv_arr = np.array(npv_arr).T/len(realizations)
     filename = os.path.join(study['extension']['storage'], 'results', 'NPV.npy')
     np.save(filename, npv_arr)
 
