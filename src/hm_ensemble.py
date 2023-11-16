@@ -7,6 +7,9 @@ import math
 from sklearn.cross_decomposition import PLSRegression
 import chaospy
 import scipy.optimize
+from scipy.optimize import NonlinearConstraint
+
+from utils.es_mda import ESMDA
 
 def get_static3d(study_path:str) -> np.ndarray:
     study = u.read_json(study_path)
@@ -45,6 +48,9 @@ def get_summary(study_path:str) -> np.ndarray:
     first_realname = list(study['extraction']['summary'].keys())[0] 
     history_years = np.load(config['historymatching']['timestep'])
     
+    darray = []
+    sim_array = []
+    hist_vector = []
     ofs = []
     for kw in objectives.keys():
         base_years = np.load(study['extraction']['summary'][first_realname]['YEARS'])
@@ -52,39 +58,43 @@ def get_summary(study_path:str) -> np.ndarray:
         sum_history = np.load(config['historymatching']['objectives'][kw])
         sum_history = u.resample(base_years, history_years, sum_history)
         
+        hist_vector.extend(sum_history)
+        
         _dsums = []
+        _sim_array = []
         for casename, _ in study['extraction']['summary'].items():
                         
             sum_simulation = np.load(study['extraction']['summary'][casename][kw])
             sum_years = np.load(study['extraction']['summary'][casename]['YEARS'])
             sum_simulation = u.resample(base_years, sum_years, sum_simulation)
-        
+
+            _sim_array.append(sum_simulation)
+            
             dsum = sum_history - sum_simulation
             _dsums.append(dsum)
+            
+        sim_array.extend(np.array(_sim_array).T)
         
         _dsums = np.array(_dsums)
-        var = np.var(_dsums, axis=0)
+        darray.append(_dsums)
         
+        var = np.var(_dsums, axis=0)
         ind_feasible = var > 0.0 #avoid zero variance
         dsums = np.nansum((_dsums**2)[:,ind_feasible]/var[ind_feasible], axis=1)
         
         ofs.append(dsums)
-            
-    # # calculate objective function
-    # ofs = []
-    # for i, (casename, _) in enumerate(study['extraction']['summary'].items()):
-    #     of = np.matmul(dsums[casename], dsums[casename])/len(dsums[casename])
-    #     ofs.append(of)
-        
+    darray = np.array(darray)
+    sim_array = np.array(sim_array).T
+    hist_vector = np.array(hist_vector)
     ofs = np.array(ofs).T
     
-    return ofs
+    return darray, sim_array, hist_vector
 
 def get_sim_property(study_path):
     
     data = {}
     data['static3d'], data['Ncell'] = get_static3d(study_path)
-    data['ofs'] = get_summary(study_path)
+    data['darray'], data['sim_array'], data['hist_vector'] = get_summary(study_path)
     return data
 
 def run_history_matching(data:dict):
@@ -95,17 +105,35 @@ def run_history_matching(data:dict):
     """
 
     static3d = data['static3d']
-    ofs = data['ofs']
-    plsr = PLSRegression(static3d.shape[1])
+    dvector = data['darray']
+    
+    # For each ensemble, calculate the sum of all the mismatch given a vector of objective function
+    ofs = []
+    for _dsums in dvector:
+        var = np.var(_dsums, axis=0)
+        ind_feasible = var > 0.0
+        dsums = np.nansum((_dsums**2)[:,ind_feasible]/var[ind_feasible], axis=1)
+        ofs.append(dsums)
+        
+    ofs = np.array(ofs).T
+    
+    n_component = 5
+    plsr = PLSRegression(n_component)
    
     scoresX, scoresY = plsr.fit_transform(static3d, ofs)
+    new_data = np.matmul(scoresX, plsr.x_loadings_.T)
+    new_data *= plsr._x_std
+    new_data += plsr._x_mean
+
+    diff = static3d - new_data
+
     
     total_variance_in_x = np.sum(np.var(static3d, axis=0))
     variance_in_x = np.var(plsr.x_scores_, axis=0)
     fractions_of_explained_variance = variance_in_x/total_variance_in_x
     fractions_of_explained_variance = fractions_of_explained_variance/np.sum(fractions_of_explained_variance)
 
-    n_component = [i for i, v in enumerate(np.cumsum(fractions_of_explained_variance)) if v > 0.75][0]
+    # n_component = [i for i, v in enumerate(np.cumsum(fractions_of_explained_variance)) if v > 0.75][0]
 
     models = []
     nodes = scoresX[:,:n_component].T
@@ -124,15 +152,69 @@ def run_history_matching(data:dict):
     x0 = np.mean(scoresX[:,:n_component], axis=0)
     def fun(x):
         return model(x)
-
-    res = scipy.optimize.minimize(fun, x0, args=(), method=None, jac=None, hess=None, hessp=None, bounds=bounds, constraints=(), tol=None, callback=None, options=None)
+        
+    # res = scipy.optimize.minimize(fun, x0, args=(), method=None, jac=None, hess=None, hessp=None, bounds=bounds, constraints=(), tol=None, callback=None, options=None)
+    
+    def dummy(x, ii):
+        _var = scoresX*1
+        _var[:,:n_component] = x
+        result = plsr.inverse_transform(_var)
+        return result[ii,:]
+    
+    cons = []
+    for ii in range(static3d.shape[0]):
+        # one constraint for each ensemble member
+        cons.append(NonlinearConstraint(lambda x, ii=ii : dummy(x, ii), 
+                                        np.min(new_data, axis=0), 
+                                        np.max(new_data, axis=0)))
+    
+    res = scipy.optimize.minimize(fun, 
+                                  x0, 
+                                  args=(), 
+                                  method=None, 
+                                  jac=None, 
+                                  hess=None, 
+                                  hessp=None, 
+                                  bounds=bounds, 
+                                  constraints=cons,
+                                  tol=None, 
+                                  callback=None, 
+                                  options=None)
     scoresX_post = scoresX*1
     
     scoresX_post[:,:n_component] = res.x
+    # scoresX_post = diff + scoresX_post
 
     # Transform to the original space
-    static3d_post, _ = plsr.inverse_transform(scoresX_post, scoresY)
+    static3d_post = plsr.inverse_transform(scoresX_post)
+    static3d_post = diff + static3d_post
     return static3d_post 
+
+def run_esmda(data):
+    
+    static3d = data['static3d']
+    sim_array = data['sim_array']
+    hist_vector = data['hist_vector']
+    
+    esmda = ESMDA(m=static3d,
+                  g_func=None,
+                  g_obs=hist_vector,
+                  alphas=[1],
+                  cd=np.ones(hist_vector.shape[0]))
+    
+    
+    var = np.var(sim_array, axis=0)
+    var[var == 0.0] = np.mean(var[var > 0.0])
+    var = np.sqrt(var)
+    # print(var)
+    static3d_post = esmda.update(m = static3d,
+                 g = sim_array, 
+                 g_obs = hist_vector,
+                 alpha = 0.5,
+                 cd = np.ones(len(hist_vector))*5)
+                #  cd = var) #cd = np.ones(len(hist_vector))*100)
+    
+    return static3d_post
 
 def save_posterior(static3d_post, study_path):
     
@@ -141,6 +223,12 @@ def save_posterior(static3d_post, study_path):
     config = study['creation']['config']
     hm = config['historymatching']
     updatepath = hm['updatepath']
+    
+    if os.path.isdir(updatepath):
+        pass
+    else:
+        os.mkdir(updatepath)
+    
     models = hm['model3d']
     
     
@@ -170,15 +258,29 @@ def main(argv):
     timestamp = datetime.timestamp(now)
     dt_start = str(datetime.fromtimestamp(timestamp))
 
+    study = u.read_json(study_path)
     data = get_sim_property(study_path)
-    static3d_post = run_history_matching(data)
+    
+    try:
+        method = argv[1]
+    except IndexError:
+        method = study['creation']['config']['historymatching']['method']
+        pass
+    
+    if method == "PLSR":    
+        static3d_post = run_history_matching(data)
+        
+    elif method == "ESMDA":
+        static3d_post = run_esmda(data)
+        
+        
     posterior_paths = save_posterior(static3d_post, study_path)
     
     now = datetime.now()
     timestamp = datetime.timestamp(now)
     dt_end = str(datetime.fromtimestamp(timestamp))
     
-    study = u.read_json(study_path)
+    
     
     study['status'] = 'history matched'
     study['historymatched'] = {}
