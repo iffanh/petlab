@@ -39,7 +39,8 @@ class SummaryKeys():
                      "WOIR",
                      "FGOR",
                      "WFOR",
-                     "WBHP"]
+                     "WBHP",
+                     "WWCT"]
         
 class Static3DPropertyKeys():
     def __init__(self) -> None:

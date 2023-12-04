@@ -112,7 +112,7 @@ def np_cache(function):
     
 def resample(base_date, custom_date, data):
     
-    f = interp.interp1d(custom_date, data)
+    f = interp.interp1d(custom_date, data, fill_value="extrapolate")
     new_data = f(base_date)
     return new_data
 

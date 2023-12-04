@@ -48,9 +48,9 @@ def get_summary(study_path:str) -> np.ndarray:
     first_realname = list(study['extraction']['summary'].keys())[0] 
     history_years = np.load(config['historymatching']['timestep'])
     
-    darray = []
-    sim_array = []
-    hist_vector = []
+    darray = [] # array of difference of simulation and history (Ne x Nd)
+    sim_array = [] # simulation array (Ne x Nd)
+    hist_vector = [] # historic vector
     ofs = []
     for kw in objectives.keys():
         base_years = np.load(study['extraction']['summary'][first_realname]['YEARS'])
@@ -67,6 +67,7 @@ def get_summary(study_path:str) -> np.ndarray:
             sum_simulation = np.load(study['extraction']['summary'][casename][kw])
             sum_years = np.load(study['extraction']['summary'][casename]['YEARS'])
             sum_simulation = u.resample(base_years, sum_years, sum_simulation)
+            # sum_simulation = u.resample(base_years, sum_years, sum_simulation)
 
             _sim_array.append(sum_simulation)
             
@@ -105,11 +106,11 @@ def run_history_matching(data:dict):
     """
 
     static3d = data['static3d']
-    dvector = data['darray']
+    darray = data['darray']
     
     # For each ensemble, calculate the sum of all the mismatch given a vector of objective function
     ofs = []
-    for _dsums in dvector:
+    for _dsums in darray:
         var = np.var(_dsums, axis=0)
         ind_feasible = var > 0.0
         dsums = np.nansum((_dsums**2)[:,ind_feasible]/var[ind_feasible], axis=1)
@@ -117,15 +118,16 @@ def run_history_matching(data:dict):
         
     ofs = np.array(ofs).T
     
-    n_component = 5
+
+    n_component = 17
     plsr = PLSRegression(n_component)
    
     scoresX, scoresY = plsr.fit_transform(static3d, ofs)
-    new_data = np.matmul(scoresX, plsr.x_loadings_.T)
-    new_data *= plsr._x_std
-    new_data += plsr._x_mean
+    static3d_hat = np.matmul(scoresX, plsr.x_loadings_.T)
+    static3d_hat *= plsr._x_std
+    static3d_hat += plsr._x_mean
 
-    diff = static3d - new_data
+    diff = static3d - static3d_hat
 
     
     total_variance_in_x = np.sum(np.var(static3d, axis=0))
@@ -143,7 +145,7 @@ def run_history_matching(data:dict):
         expansion = chaospy.generate_expansion(4, d, rule="three_terms_recurrence")
         model = chaospy.fit_quadrature(expansion, nodes, weights, ofs)
         models.append(model)
-    model = lambda x: np.sum([fractions_of_explained_variance[i]*model(x[i]) for i, model in enumerate(models)])
+    model = lambda x: np.sum([(fractions_of_explained_variance[i])*model(x[i]) for i, model in enumerate(models)])
          
     min_bounds = np.min(nodes, axis=1)
     max_bounds = np.max(nodes, axis=1)
@@ -165,8 +167,8 @@ def run_history_matching(data:dict):
     for ii in range(static3d.shape[0]):
         # one constraint for each ensemble member
         cons.append(NonlinearConstraint(lambda x, ii=ii : dummy(x, ii), 
-                                        np.min(new_data, axis=0), 
-                                        np.max(new_data, axis=0)))
+                                        np.min(static3d_hat, axis=0), 
+                                        np.max(static3d_hat, axis=0)))
     
     res = scipy.optimize.minimize(fun, 
                                   x0, 
@@ -183,11 +185,18 @@ def run_history_matching(data:dict):
     scoresX_post = scoresX*1
     
     scoresX_post[:,:n_component] = res.x
-    # scoresX_post = diff + scoresX_post
 
     # Transform to the original space
     static3d_post = plsr.inverse_transform(scoresX_post)
     static3d_post = diff + static3d_post
+    
+    for j in range(static3d_post.shape[0]):
+        violated_cell_index = static3d_post[j,:] < np.min(static3d, axis=0)
+        static3d_post[j,:][violated_cell_index] = np.min(static3d, axis=0)[violated_cell_index]
+        
+        violated_cell_index = static3d_post[j,:] > np.max(static3d, axis=0)
+        static3d_post[j,:][violated_cell_index] = np.max(static3d, axis=0)[violated_cell_index]
+        
     return static3d_post 
 
 def run_esmda(data):
@@ -202,17 +211,39 @@ def run_esmda(data):
                   alphas=[1],
                   cd=np.ones(hist_vector.shape[0]))
     
+    # plsr = PLSRegression(static3d.shape[1])
+    plsr = PLSRegression(5)
+    scoresX, scoresY = plsr.fit_transform(static3d, sim_array)
+    diff = static3d - plsr.inverse_transform(scoresX)
+
+    _, hist_scoresY = plsr.transform(static3d, np.array([hist_vector]))
     
-    var = np.var(sim_array, axis=0)
-    var[var == 0.0] = np.mean(var[var > 0.0])
-    var = np.sqrt(var)
-    # print(var)
-    static3d_post = esmda.update(m = static3d,
-                 g = sim_array, 
-                 g_obs = hist_vector,
-                 alpha = 0.5,
-                 cd = np.ones(len(hist_vector))*5)
-                #  cd = var) #cd = np.ones(len(hist_vector))*100)
+    var = np.var(scoresY, axis=0)
+    ind_feasible = var > 0.0
+    
+    var = var[ind_feasible]
+    g = scoresY[:,ind_feasible]
+    g_obs = hist_scoresY[0,ind_feasible]
+    
+    
+    print(g.shape, g_obs.shape, scoresX.shape)
+    
+    scoresX_post = esmda.update(m = scoresX,
+                 g = g, 
+                 g_obs = g_obs,
+                 alpha = 4.0,
+                 cd = 1/var) #cd = np.ones(len(hist_vector))*100)
+    
+    static3d_post = plsr.inverse_transform(scoresX_post)
+    static3d_post = static3d_post + diff
+    
+    for j in range(static3d_post.shape[0]):
+        violated_cell_index = static3d_post[j,:] < np.min(static3d, axis=0)
+        static3d_post[j,:][violated_cell_index] = np.min(static3d, axis=0)[violated_cell_index]
+        
+        violated_cell_index = static3d_post[j,:] > np.max(static3d, axis=0)
+        static3d_post[j,:][violated_cell_index] = np.max(static3d, axis=0)[violated_cell_index]
+    
     
     return static3d_post
 
