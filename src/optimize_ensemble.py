@@ -214,7 +214,7 @@ def calculate_npv(study, unit, summary_folder):
             npv.append(npv_t)
         npv_arr.append(npv)
         
-    npv_arr = np.array(npv_arr).T/len(realizations)
+    npv_arr = np.array(npv_arr).T
     filename = os.path.join(study['extension']['storage'], 'results', 'NPV.npy')
     np.save(filename, npv_arr)
 
@@ -306,7 +306,7 @@ def cost_function(x, study_path, simulator_path):
                 fwpts.append(fwpt)
                 
             val = calc_stats(fwpts, d['robustness']['type'], d['robustness']['value'])
-            val = (val - d['value'])/abs(d['value'])
+            val = (d['value'] - val)/abs(d['value'])
             
         elif c == "FGPT":
             fgpts = []
@@ -315,15 +315,15 @@ def cost_function(x, study_path, simulator_path):
                 fgpts.append(fgpt)
                 
             val = calc_stats(fgpts, d['robustness']['type'], d['robustness']['value'])
-            val = (val - d['value'])/abs(d['value'])
+            val = (d['value'] - val)/abs(d['value'])
         
         else:
             raise NotImplementedError(f"Constraints of type {c} has not been implemented yet.")
         
         if d['type'] == "inequality":
-            ineqs.append(-val)
+            ineqs.append(val)
         elif d['type'] == "equality":
-            eqs.append(-val)
+            eqs.append(val)
     
     results = (-npv_cf, eqs, ineqs)
     print(f"results = {results}")
@@ -362,13 +362,15 @@ def run_optimization(study_path, simulator_path):
       
     # redefine constants
     opt_constants = config['optimization']['parameters']['constants']
+    opts = config['optimization']['parameters']['options']
     
     tr = trsqp.TrustRegionSQPFilter(x0, 
-                                    k=2*Nc+1,
+                                    k=Nc+1,
                                     cf=cf,
                                     eqcs=[*eqs],
                                     ineqcs=[*ineqs],
-                                    constants=opt_constants)
+                                    constants=opt_constants,
+                                    opts=opts)
     
     tr.optimize(max_iter=config['optimization']['parameters']['maxIter'])
     
