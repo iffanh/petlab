@@ -1,0 +1,102 @@
+{
+    "Name": "HM_PG8607",
+    "Ne": 64,
+    "root": "./data/SPE1_data/SPE1_PG8607_POST.DATA",
+    "n_parallel": 8,
+    "parameters":
+        [
+         {
+            "Name": "$POROSITY",
+            "Type": "SingleValue",
+            "Distribution": {
+               "name": "Constant",
+               "parameters": {
+                       "value": 0.3,
+                       "type": "float"}
+           }
+         },
+         {
+            "Name": "$PERMX", 
+            "Type": "IncrementalValue",
+            "Distribution": {
+            "parameters": {
+                     "prefix": "./data/SPE1_data/SPE1_PG8607_POST/PERMX_",
+                     "suffix": ".npy"
+                  }
+            }
+         }
+       ],
+   "controls":
+            [
+               {
+                  "Name": "$PRODRATE",
+                  "Default": 20000,
+                  "type": "float"
+               },
+               {
+                  "Name": "$INJRATE",
+                  "Default": 100000,
+                  "type": "float"
+               }
+            ],
+   "optimization":
+            {
+               "parameters": 
+                  {
+                     "maxIter": 20,
+                     "costFunction": "NPV",
+                     "constraints": {
+                        "FWPT": {
+                            "is_active": true,
+                            "value": 12000,
+                            "type": "inequality",
+                            "robustness": {
+                                "type": "percentile",
+                                "value": 95
+                            }
+                        },
+                        "FGPT": {
+                            "is_active": true,
+                            "value": 250E+6,
+                            "type": "inequality",
+                            "robustness": {
+                                "type": "percentile",
+                                "value": 95
+                            }
+                        }
+                    },
+                     "constants": {
+                           "gamma_0": 0.5,
+                           "gamma_1": 0.8,
+                           "gamma_2": 1.5,
+                           "eta_1": 0.0001,
+                           "eta_2": 0.01,
+                           "mu": 0.01,
+                           "gamma_vartheta": 0.1,
+                           "kappa_vartheta": 0.0001,
+                           "kappa_radius": 0.8,
+                           "kappa_mu": 10,
+                           "kappa_tmd": 0.01,
+                           "init_radius": 0.2,
+                           "stopping_radius": 0.001,
+                           "L_threshold": 1.0
+                       }
+                  }
+            },
+      "historymatching":
+            {
+               "updatepath":"./data/SPE1_data/SPE1_PG8607_POST",
+               "method": "PLSR",
+               "model3d": 
+                  [
+                     "PERMX"
+                  ],
+               "timestep": "./data/SPE1_data/History/SPE1_RF_3/summary/YEARS.npy",
+               "objectives":
+                  {
+                     "WBHP:INJ": "./data/SPE1_data/History/SPE1_RF_3/summary/WBHP:INJ.npy",
+                     "WBHP:PROD": "./data/SPE1_data/History/SPE1_RF_3/summary/WBHP:PROD.npy",
+                     "WOPR:PROD": "./data/SPE1_data/History/SPE1_RF_3/summary/WOPR:PROD.npy"
+                  }
+            }
+}
