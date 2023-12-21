@@ -5,6 +5,8 @@ from datetime import datetime
 import math
 
 from sklearn.cross_decomposition import PLSRegression
+from sklearn.decomposition import FastICA
+from sklearn.preprocessing import StandardScaler
 import chaospy
 import scipy.optimize
 from scipy.optimize import NonlinearConstraint
@@ -98,7 +100,7 @@ def get_sim_property(study_path):
     data['darray'], data['sim_array'], data['hist_vector'] = get_summary(study_path)
     return data
 
-def run_history_matching(data:dict):
+def run_history_matching(data:dict, params:dict):
     """This part consists of several steps:
         1. Using PLSR, calculate the scores in the projected space
         2. Get the first N_comp = 5 components. These components will be modeled by Data Driven-PCE
@@ -118,8 +120,10 @@ def run_history_matching(data:dict):
         
     ofs = np.array(ofs).T
     
+    scaler = StandardScaler()
+    n_ofs = scaler.fit_transform(ofs)
 
-    n_component = 17
+    n_component = params['ncomponent']
     plsr = PLSRegression(n_component)
    
     scoresX, scoresY = plsr.fit_transform(static3d, ofs)
@@ -142,10 +146,13 @@ def run_history_matching(data:dict):
     weights = np.ones(len(ofs))
     for j in range(n_component):
         d = chaospy.GaussianKDE(scoresX[:,j])
-        expansion = chaospy.generate_expansion(4, d, rule="three_terms_recurrence")
-        model = chaospy.fit_quadrature(expansion, nodes, weights, ofs)
+        expansion = chaospy.generate_expansion(3, d, rule="three_terms_recurrence")
+        # model = chaospy.fit_quadrature(expansion, nodes, weights, ofs)
+        model = chaospy.fit_quadrature(expansion, nodes, weights, n_ofs)
         models.append(model)
+        
     model = lambda x: np.sum([(fractions_of_explained_variance[i])*model(x[i]) for i, model in enumerate(models)])
+        # model = lambda x: np.sum([model(x[i]) for i, model in enumerate(models)])
          
     min_bounds = np.min(nodes, axis=1)
     max_bounds = np.max(nodes, axis=1)
@@ -155,8 +162,6 @@ def run_history_matching(data:dict):
     def fun(x):
         return model(x)
         
-    # res = scipy.optimize.minimize(fun, x0, args=(), method=None, jac=None, hess=None, hessp=None, bounds=bounds, constraints=(), tol=None, callback=None, options=None)
-    
     def dummy(x, ii):
         _var = scoresX*1
         _var[:,:n_component] = x
@@ -170,6 +175,7 @@ def run_history_matching(data:dict):
                                         np.min(static3d_hat, axis=0), 
                                         np.max(static3d_hat, axis=0)))
     
+    print("Minimizing ...")
     res = scipy.optimize.minimize(fun, 
                                   x0, 
                                   args=(), 
@@ -182,6 +188,7 @@ def run_history_matching(data:dict):
                                   tol=None, 
                                   callback=None, 
                                   options=None)
+    print("Done!")
     scoresX_post = scoresX*1
     
     scoresX_post[:,:n_component] = res.x
@@ -196,10 +203,314 @@ def run_history_matching(data:dict):
         
         violated_cell_index = static3d_post[j,:] > np.max(static3d, axis=0)
         static3d_post[j,:][violated_cell_index] = np.max(static3d, axis=0)[violated_cell_index]
+
+    return static3d_post 
+
+
+def run_plsr(data:dict, params:dict):
+    """This part consists of several steps:
+        1. Using PLSR, calculate the scores in the projected space
+        2. Get the first N_comp = 5 components. These components will be modeled by Data Driven-PCE
+        3. Minimize the model
+    """
+
+    static3d = data['static3d']
+    darray = data['darray']
+    
+    # For each ensemble, calculate the sum of all the mismatch given a vector of objective function
+    ofs = []
+    for _dsums in darray:
+        var = np.var(_dsums, axis=0)
+        ind_feasible = var > 0.0
+        dsums = np.nansum((_dsums**2)[:,ind_feasible]/var[ind_feasible], axis=1)
+        ofs.append(dsums)
+        
+    ofs = np.array(ofs).T
+    
+    scaler = StandardScaler()
+    n_ofs = scaler.fit_transform(ofs)
+
+    n_component = params['ncomponent']
+    plsr = PLSRegression(n_component)
+   
+    scoresX, scoresY = plsr.fit_transform(static3d, ofs)
+    static3d_hat = np.matmul(scoresX, plsr.x_loadings_.T)
+    static3d_hat *= plsr._x_std
+    static3d_hat += plsr._x_mean
+
+    diff = static3d - static3d_hat
+
+    
+    total_variance_in_x = np.sum(np.var(static3d, axis=0))
+    variance_in_x = np.var(plsr.x_scores_, axis=0)
+    fractions_of_explained_variance = variance_in_x/total_variance_in_x
+    fractions_of_explained_variance = fractions_of_explained_variance/np.sum(fractions_of_explained_variance)
+
+    # n_component = [i for i, v in enumerate(np.cumsum(fractions_of_explained_variance)) if v > 0.75][0]
+
+    models = []
+    priors = []
+    nodes = scoresX[:,:n_component].T
+    weights = np.ones(len(ofs))
+    
+    for j in range(n_component):
+        d = chaospy.GaussianKDE(scoresX[:,j])
+        expansion = chaospy.generate_expansion(3, d, rule="three_terms_recurrence")
+        # print(ofs.shape)
+        model = chaospy.fit_quadrature(expansion, nodes[j,:], weights, n_ofs)
+
+        priors.append(d)
+        models.append(model)
+         
+    # print(models)
+    min_bounds = np.min(nodes, axis=1)
+    max_bounds = np.max(nodes, axis=1)
+    bounds = [(a, b) for a, b in zip(min_bounds, max_bounds)]
+    
+    
+    scoresX_post = scoresX*1
+    for jj, (model, prior) in enumerate(zip(models, priors)):
+        
+        def fun(x):
+            # calculate posterior pdf
+            
+            # post_model = lambda x : np.matmul((scoresY[:,jj] - model(x)), (scoresY[:,jj] - model(x)).T)/np.std(scoresY[:,jj]) + \
+            #                         np.matmul((scoresX[:,jj] - x), (scoresX[:,jj] - x).T)/np.std(scoresX[:,jj])
+                    
+            # return post_model(x)
+            return np.mean(model(x))
+            
+        def dummy(x, ii):
+            _var = scoresX*1
+            _var[:,jj] = x
+            result = plsr.inverse_transform(_var)
+            return result[ii,:]
+        
+        cons = []
+        for ii in range(static3d.shape[0]):
+            # one constraint for each ensemble member
+            cons.append(NonlinearConstraint(lambda x, ii=ii : dummy(x, ii), 
+                                            np.min(static3d_hat, axis=0), 
+                                            np.max(static3d_hat, axis=0)))
+
+        x0 = np.mean(scoresX[:,jj])
+        print(x0)
+        print("Minimizing ...")
+        res = scipy.optimize.minimize(fun, 
+                                    x0, 
+                                    args=(), 
+                                    method=None, 
+                                    jac=None, 
+                                    hess=None, 
+                                    hessp=None, 
+                                    bounds=None, 
+                                    constraints=cons,
+                                    tol=None, 
+                                    callback=None, 
+                                    options=None)
+        print("Done!")
+        scoresX_post[:,jj] = scoresX_post[:,jj] + res.x - x0
+
+    print('YEAYYY')
+    # Transform to the original space
+    static3d_post = plsr.inverse_transform(scoresX_post)
+    static3d_post = diff + static3d_post
+    
+    for j in range(static3d_post.shape[0]):
+        violated_cell_index = static3d_post[j,:] < np.min(static3d, axis=0)
+        static3d_post[j,:][violated_cell_index] = np.min(static3d, axis=0)[violated_cell_index]
+        
+        violated_cell_index = static3d_post[j,:] > np.max(static3d, axis=0)
+        static3d_post[j,:][violated_cell_index] = np.max(static3d, axis=0)[violated_cell_index]
         
     return static3d_post 
 
-def run_esmda(data):
+def run_fica(data:dict, params:dict):
+    """This part consists of several steps:
+        1. Using FICA, calculate the scores in the projected space
+        2. Get the first N_comp = 5 components. These components will be modeled by Data Driven-PCE
+        3. Minimize the model
+    """
+
+    static3d = data['static3d']
+    darray = data['darray']
+    
+    # For each ensemble, calculate the sum of all the mismatch given a vector of objective function
+    ofs = []
+    for _dsums in darray:
+        var = np.var(_dsums, axis=0)
+        ind_feasible = var > 0.0
+        dsums = np.nansum((_dsums**2)[:,ind_feasible]/var[ind_feasible], axis=1)
+        ofs.append(dsums)
+        
+    ofs = np.array(ofs).T
+    
+    scaler = StandardScaler()
+    n_ofs = scaler.fit_transform(ofs)
+
+    n_component = params['ncomponent']
+    fica = FastICA(n_component)
+   
+    scoresX = fica.fit_transform(static3d)
+    static3d_hat = fica.inverse_transform(scoresX)
+    # static3d_hat = np.matmul(scoresX, plsr.x_loadings_.T)
+    # static3d_hat *= plsr._x_std
+    # static3d_hat += plsr._x_mean
+
+    
+    
+    diff = static3d - static3d_hat
+    print(diff)
+    
+    total_variance_in_x = np.sum(np.var(static3d, axis=0))
+    variance_in_x = np.var(scoresX, axis=0)
+    fractions_of_explained_variance = variance_in_x/total_variance_in_x
+    fractions_of_explained_variance = fractions_of_explained_variance/np.sum(fractions_of_explained_variance)
+
+    # n_component = [i for i, v in enumerate(np.cumsum(fractions_of_explained_variance)) if v > 0.75][0]
+
+    #### ORIGINAL ####
+    # models = []
+    # nodes = scoresX[:,:n_component].T
+    # weights = np.ones(len(ofs))
+
+    # for j in range(n_component):
+    #     d = chaospy.GaussianKDE(scoresX[:,j])
+    #     expansion = chaospy.generate_expansion(3, d, rule="three_terms_recurrence")
+    #     model = chaospy.fit_quadrature(expansion, nodes, weights, ofs)
+    #     # model = chaospy.fit_quadrature(expansion, nodes, weights, n_ofs)
+    #     models.append(model)
+    #     # model = lambda x: np.sum([(fractions_of_explained_variance[i])*model(x[i]) for i, model in enumerate(models)])
+    #     model = lambda x: np.sum([(fractions_of_explained_variance[i])*model(x[i])*d.pdf(x[i]) for i, model in enumerate(models)])
+    #     # model = lambda x: np.sum([model(x[i]) for i, model in enumerate(models)])
+         
+    # min_bounds = np.min(nodes, axis=1)
+    # max_bounds = np.max(nodes, axis=1)
+    # bounds = [(a, b) for a, b in zip(min_bounds, max_bounds)]
+    
+    # x0 = np.mean(scoresX[:,:n_component], axis=0)
+    # def fun(x):
+    #     return np.log(model(x))
+        
+    # # res = scipy.optimize.minimize(fun, x0, args=(), method=None, jac=None, hess=None, hessp=None, bounds=bounds, constraints=(), tol=None, callback=None, options=None)
+    
+    # def dummy(x, ii):
+    #     _var = scoresX*1
+    #     _var[:,:n_component] = x
+    #     result = fica.inverse_transform(_var)
+    #     return result[ii,:]
+    
+    # cons = []
+    # for ii in range(static3d.shape[0]):
+    #     # one constraint for each ensemble member
+    #     cons.append(NonlinearConstraint(lambda x, ii=ii : dummy(x, ii), 
+    #                                     np.min(static3d_hat, axis=0), 
+    #                                     np.max(static3d_hat, axis=0)))
+    
+    # print("Minimizing ...")
+    # res = scipy.optimize.minimize(fun, 
+    #                               x0, 
+    #                               args=(), 
+    #                               method=None, 
+    #                               jac=None, 
+    #                               hess=None, 
+    #                               hessp=None, 
+    #                             #   bounds=bounds,
+    #                               bounds=None, 
+    #                               constraints=cons,
+    #                               tol=None, 
+    #                               callback=None, 
+    #                               options=None)
+    # print("Done!")
+    # scoresX_post = scoresX*1
+    
+    # scoresX_post[:,:n_component] = res.x
+
+    # # Transform to the original space
+    # static3d_post = fica.inverse_transform(scoresX_post)
+    # static3d_post = diff + static3d_post
+    
+    # for j in range(static3d_post.shape[0]):
+    #     violated_cell_index = static3d_post[j,:] < np.min(static3d, axis=0)
+    #     static3d_post[j,:][violated_cell_index] = np.min(static3d, axis=0)[violated_cell_index]
+        
+    #     violated_cell_index = static3d_post[j,:] > np.max(static3d, axis=0)
+    #     static3d_post[j,:][violated_cell_index] = np.max(static3d, axis=0)[violated_cell_index]
+        
+    # ### END ####
+    
+    models = []
+    nodes = scoresX[:,:n_component].T
+    weights = np.ones(len(ofs))
+
+    for j in range(n_component):
+        d = chaospy.GaussianKDE(scoresX[:,j])
+        expansion = chaospy.generate_expansion(3, d, rule="three_terms_recurrence")
+        model = chaospy.fit_quadrature(expansion, nodes, weights, ofs)
+        # model = chaospy.fit_quadrature(expansion, nodes, weights, n_ofs)
+        models.append(model)
+        # model = lambda x: np.sum([(fractions_of_explained_variance[i])*model(x[i]) for i, model in enumerate(models)])
+        model = lambda x: np.sum([(fractions_of_explained_variance[i])*model(x[i]) for i, model in enumerate(models)])
+        # model = lambda x: np.sum([model(x[i]) for i, model in enumerate(models)])
+         
+    min_bounds = np.min(nodes, axis=1)
+    max_bounds = np.max(nodes, axis=1)
+    bounds = [(a, b) for a, b in zip(min_bounds, max_bounds)]
+    
+    x0 = np.mean(scoresX[:,:n_component], axis=0)
+    def fun(x):
+        return np.log(model(x))
+        
+    # res = scipy.optimize.minimize(fun, x0, args=(), method=None, jac=None, hess=None, hessp=None, bounds=bounds, constraints=(), tol=None, callback=None, options=None)
+    
+    def dummy(x, ii):
+        _var = scoresX*1
+        _var[:,:n_component] = x
+        result = fica.inverse_transform(_var)
+        return result[ii,:]
+    
+    cons = []
+    for ii in range(static3d.shape[0]):
+        # one constraint for each ensemble member
+        cons.append(NonlinearConstraint(lambda x, ii=ii : dummy(x, ii), 
+                                        np.min(static3d_hat, axis=0), 
+                                        np.max(static3d_hat, axis=0)))
+    
+    print("Minimizing ...")
+    res = scipy.optimize.minimize(fun, 
+                                  x0, 
+                                  args=(), 
+                                  method=None, 
+                                  jac=None, 
+                                  hess=None, 
+                                  hessp=None, 
+                                #   bounds=bounds,
+                                  bounds=None, 
+                                  constraints=cons,
+                                  tol=None, 
+                                  callback=None, 
+                                  options=None)
+    print("Done!")
+    scoresX_post = scoresX*1
+    
+    scoresX_post[:,:n_component] = res.x
+
+    # Transform to the original space
+    static3d_post = fica.inverse_transform(scoresX_post)
+    static3d_post = diff + static3d_post
+    
+    for j in range(static3d_post.shape[0]):
+        violated_cell_index = static3d_post[j,:] < np.min(static3d, axis=0)
+        static3d_post[j,:][violated_cell_index] = np.min(static3d, axis=0)[violated_cell_index]
+        
+        violated_cell_index = static3d_post[j,:] > np.max(static3d, axis=0)
+        static3d_post[j,:][violated_cell_index] = np.max(static3d, axis=0)[violated_cell_index]
+        
+    
+    
+    return static3d_post 
+
+def run_esmda(data, params):
     
     static3d = data['static3d']
     sim_array = data['sim_array']
@@ -212,7 +523,7 @@ def run_esmda(data):
                   cd=np.ones(hist_vector.shape[0]))
     
     # plsr = PLSRegression(static3d.shape[1])
-    plsr = PLSRegression(5)
+    plsr = PLSRegression(params['ncomponent'])
     scoresX, scoresY = plsr.fit_transform(static3d, sim_array)
     diff = static3d - plsr.inverse_transform(scoresX)
 
@@ -231,7 +542,7 @@ def run_esmda(data):
     scoresX_post = esmda.update(m = scoresX,
                  g = g, 
                  g_obs = g_obs,
-                 alpha = 4.0,
+                 alpha = params['alpha'],
                  cd = 1/var) #cd = np.ones(len(hist_vector))*100)
     
     static3d_post = plsr.inverse_transform(scoresX_post)
@@ -298,11 +609,36 @@ def main(argv):
         method = study['creation']['config']['historymatching']['method']
         pass
     
-    if method == "PLSR":    
-        static3d_post = run_history_matching(data)
+    # Number of principal components
+    try: 
+        ncomponent = int(argv[2])
+    except IndexError:
+        ncomponent = 15
+        
+    try:
+        alpha = float(argv[3])
+    except IndexError:
+        if method == 'PLSR':
+            alpha = None
+        elif method == 'FICA':
+            alpha = None 
+        elif method == 'ESMDA':
+            alpha = 4.0
+    
+    if method == "PLSR":
+        params = {'ncomponent': ncomponent}
+        static3d_post = run_history_matching(data, params)
+        # static3d_post = run_plsr(data, params)
+    
+    elif method == "FICA":
+        params = {'ncomponent': ncomponent, 
+                  'alpha': alpha}
+        static3d_post = run_fica(data, params)
         
     elif method == "ESMDA":
-        static3d_post = run_esmda(data)
+        params = {'ncomponent': ncomponent, 
+                  'alpha': alpha}
+        static3d_post = run_esmda(data, params)
         
         
     posterior_paths = save_posterior(static3d_post, study_path)
@@ -328,4 +664,5 @@ if __name__ == "__main__":
     
     Ex. python3 src/hm_ensemble.py simulations/studies/IE_PoroPerm2_RF.json 
     """
+    print("HISTORY MATCHING")
     main(sys.argv[1:])

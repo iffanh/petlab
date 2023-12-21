@@ -66,7 +66,7 @@ class ESMDA():
         alpha       : es-mda sub-step
         cd          : vector of measurement error (1 x b)
         """
-        K = np.matmul(cov_mg,np.linalg.pinv(cov_gg + alpha*np.diag(cd))) 
+        K = np.matmul(cov_mg,np.linalg.pinv(cov_gg + (1/alpha)*np.diag(cd))) 
         dg = g_obs - g_prior
         m_posterior = m_prior + np.matmul(K,dg)
         
