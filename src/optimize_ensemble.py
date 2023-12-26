@@ -360,6 +360,22 @@ def run_optimization(study_path, simulator_path):
     eqs = [lambda x, study_path=study_path, simulator_path=simulator_path, i=i: cost_function(x, study_path, simulator_path)[1][i] for i in range(n_eq)]
     ineqs = [lambda x, study_path=study_path, simulator_path=simulator_path, i=i: cost_function(x, study_path, simulator_path)[2][i] for i in range(n_ineq)]
       
+    # define bounds
+    lb = []
+    ub = []
+    for c in controls:
+        try:
+            lb.append(c['lb'])
+        except:
+            lb.append(-np.inf)
+            
+        try:
+            ub.append(c['ub'])
+        except:
+            ub.append(np.inf)
+    
+    # ub = [c["ub"] for c in controls]
+    
     # redefine constants
     opt_constants = config['optimization']['parameters']['constants']
     opts = config['optimization']['parameters']['options']
@@ -367,6 +383,8 @@ def run_optimization(study_path, simulator_path):
     tr = trsqp.TrustRegionSQPFilter(x0, 
                                     k=Nc+1,
                                     cf=cf,
+                                    lb=lb,
+                                    ub=ub,
                                     eqcs=[*eqs],
                                     ineqcs=[*ineqs],
                                     constants=opt_constants,
@@ -374,8 +392,40 @@ def run_optimization(study_path, simulator_path):
     
     tr.optimize(max_iter=config['optimization']['parameters']['maxIter'])
     
-    return
+    return tr
 
+def save_iterations(tr):
+    
+    # save iterations
+    out = {}
+    f = []
+    for t in tr.iterates:
+        f.append(t["fY"][0])
+    out["f"] = f
+    
+    x = []
+    for t in tr.iterates:
+        xs = t["Y"][:,0].tolist()
+        x.append(tr.denorm(np.array(xs)).tolist())
+    out["x"] = x
+    
+    neval = []
+    for t in tr.iterates:
+        neval.append(t["number_of_function_calls"])
+    out["neval"] = neval
+
+    v = []
+    for t in tr.iterates:
+        v.append(t['all_violations'])
+    out["all_violations"] = v
+    
+    v = []
+    for t in tr.iterates:
+        v.append(list(t['v']))
+    out["violations"] = v
+    
+    return out
+    
 def main(args):
     
     simulator_path = args[0]
@@ -393,11 +443,15 @@ def main(args):
     timestamp = datetime.timestamp(now)
     dt_start = str(datetime.fromtimestamp(timestamp))
     study['extension']['start'] = dt_start
-    run_optimization(study_path, simulator_path)
+    tr = run_optimization(study_path, simulator_path)
     now = datetime.now()
     timestamp = datetime.timestamp(now)
     dt_end = str(datetime.fromtimestamp(timestamp))
     study['extension']['end'] = dt_end
+    u.save_to_json(study_path, study)
+    
+    out = save_iterations(tr)
+    study['extension']['iterations'] = out
     
     study['status'] = "optimized"
     u.save_to_json(study_path, study)

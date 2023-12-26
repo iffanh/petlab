@@ -86,7 +86,7 @@
          {
             "parameters": 
                {
-                  "maxIter": 20,
+                  "maxIter": 2,
                   "costFunction": "NPV",
                   "constraints": {
                      "FWPT": {
@@ -123,7 +123,9 @@
                         "init_radius": 0.2,
                         "stopping_radius": 0.001,
                         "L_threshold": 1.0
-                    }
+                    },
+                  "options": {
+                  }
                }
          }
 }

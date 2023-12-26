@@ -21,241 +21,337 @@
             {
                 "Name": "$PROD1BHP1",
                 "Default": 395,
+                "lb": 250,
+                "ub": 550,
                 "type": "float"
             },
             {
                 "Name": "$PROD2BHP1",
                 "Default": 395,
+                "lb": 250,
+                "ub": 550,
                 "type": "float"
             },
             {
                 "Name": "$PROD3BHP1",
                 "Default": 395,
+                "lb": 250,
+                "ub": 550,
                 "type": "float"
             },
             {
                 "Name": "$PROD4BHP1",
                 "Default": 395,
+                "lb": 250,
+                "ub": 550,
                 "type": "float"
             },
             {
                 "Name": "$INJECT1RATE1",
                 "Default": 79.5,
+                "lb": 60,
+                "ub": 100,
                 "type": "float"
             },
             {
                 "Name": "$INJECT2RATE1",
                 "Default": 79.5,
+                "lb": 60,
+                "ub": 100,
                 "type": "float"
             },
             {
                 "Name": "$INJECT3RATE1",
                 "Default": 79.5,
+                "lb": 60,
+                "ub": 100,
                 "type": "float"
             },
             {
                 "Name": "$INJECT4RATE1",
                 "Default": 79.5,
+                "lb": 60,
+                "ub": 100,
                 "type": "float"
             },
             {
                 "Name": "$INJECT5RATE1",
                 "Default": 79.5,
+                "lb": 60,
+                "ub": 100,
                 "type": "float"
             },
             {
                 "Name": "$INJECT6RATE1",
                 "Default": 79.5,
+                "lb": 60,
+                "ub": 100,
                 "type": "float"
             },
             {
                 "Name": "$INJECT7RATE1",
                 "Default": 79.5,
+                "lb": 60,
+                "ub": 100,
                 "type": "float"
             },
             {
                 "Name": "$INJECT8RATE1",
                 "Default": 79.5,
+                "lb": 60,
+                "ub": 100,
                 "type": "float"
             },
             {
                 "Name": "$PROD1BHP2",
                 "Default": 395,
+                "lb": 250,
+                "ub": 550,
                 "type": "float"
             },
             {
                 "Name": "$PROD2BHP2",
                 "Default": 395,
+                "lb": 250,
+                "ub": 550,
                 "type": "float"
             },
             {
                 "Name": "$PROD3BHP2",
                 "Default": 395,
+                "lb": 250,
+                "ub": 550,
                 "type": "float"
             },
             {
                 "Name": "$PROD4BHP2",
                 "Default": 395,
+                "lb": 250,
+                "ub": 550,
                 "type": "float"
             },
             {
                 "Name": "$INJECT1RATE2",
                 "Default": 79.5,
+                "lb": 60,
+                "ub": 100,
                 "type": "float"
             },
             {
                 "Name": "$INJECT2RATE2",
                 "Default": 79.5,
+                "lb": 60,
+                "ub": 100,
                 "type": "float"
             },
             {
                 "Name": "$INJECT3RATE2",
                 "Default": 79.5,
+                "lb": 60,
+                "ub": 100,
                 "type": "float"
             },
             {
                 "Name": "$INJECT4RATE2",
                 "Default": 79.5,
+                "lb": 60,
+                "ub": 100,
                 "type": "float"
             },
             {
                 "Name": "$INJECT5RATE2",
                 "Default": 79.5,
+                "lb": 60,
+                "ub": 100,
                 "type": "float"
             },
             {
                 "Name": "$INJECT6RATE2",
                 "Default": 79.5,
+                "lb": 60,
+                "ub": 100,
                 "type": "float"
             },
             {
                 "Name": "$INJECT7RATE2",
                 "Default": 79.5,
+                "lb": 60,
+                "ub": 100,
                 "type": "float"
             },
             {
                 "Name": "$INJECT8RATE2",
                 "Default": 79.5,
+                "lb": 60,
+                "ub": 100,
                 "type": "float"
             },
             {
                 "Name": "$PROD1BHP3",
                 "Default": 395,
+                "lb": 250,
+                "ub": 550,
                 "type": "float"
             },
             {
                 "Name": "$PROD2BHP3",
                 "Default": 395,
+                "lb": 250,
+                "ub": 550,
                 "type": "float"
             },
             {
                 "Name": "$PROD3BHP3",
                 "Default": 395,
+                "lb": 250,
+                "ub": 550,
                 "type": "float"
             },
             {
                 "Name": "$PROD4BHP3",
                 "Default": 395,
+                "lb": 250,
+                "ub": 550,
                 "type": "float"
             },
             {
                 "Name": "$INJECT1RATE3",
                 "Default": 79.5,
+                "lb": 60,
+                "ub": 100,
                 "type": "float"
             },
             {
                 "Name": "$INJECT2RATE3",
                 "Default": 79.5,
+                "lb": 60,
+                "ub": 100,
                 "type": "float"
             },
             {
                 "Name": "$INJECT3RATE3",
                 "Default": 79.5,
+                "lb": 60,
+                "ub": 100,
                 "type": "float"
             },
             {
                 "Name": "$INJECT4RATE3",
                 "Default": 79.5,
+                "lb": 60,
+                "ub": 100,
                 "type": "float"
             },
             {
                 "Name": "$INJECT5RATE3",
                 "Default": 79.5,
+                "lb": 60,
+                "ub": 100,
                 "type": "float"
             },
             {
                 "Name": "$INJECT6RATE3",
                 "Default": 79.5,
+                "lb": 60,
+                "ub": 100,
                 "type": "float"
             },
             {
                 "Name": "$INJECT7RATE3",
                 "Default": 79.5,
+                "lb": 60,
+                "ub": 100,
                 "type": "float"
             },
             {
                 "Name": "$INJECT8RATE3",
                 "Default": 79.5,
+                "lb": 60,
+                "ub": 100,
                 "type": "float"
             },
             {
                 "Name": "$PROD1BHP4",
                 "Default": 395,
+                "lb": 250,
+                "ub": 550,
                 "type": "float"
             },
             {
                 "Name": "$PROD2BHP4",
                 "Default": 395,
+                "lb": 250,
+                "ub": 550,
                 "type": "float"
             },
             {
                 "Name": "$PROD3BHP4",
                 "Default": 395,
+                "lb": 250,
+                "ub": 550,
                 "type": "float"
             },
             {
                 "Name": "$PROD4BHP4",
                 "Default": 395,
+                "lb": 250,
+                "ub": 550,
                 "type": "float"
             },
             {
                 "Name": "$INJECT1RATE4",
                 "Default": 79.5,
+                "lb": 60,
+                "ub": 100,
                 "type": "float"
             },
             {
                 "Name": "$INJECT2RATE4",
                 "Default": 79.5,
+                "lb": 60,
+                "ub": 100,
                 "type": "float"
             },
             {
                 "Name": "$INJECT3RATE4",
                 "Default": 79.5,
+                "lb": 60,
+                "ub": 100,
                 "type": "float"
             },
             {
                 "Name": "$INJECT4RATE4",
                 "Default": 79.5,
+                "lb": 60,
+                "ub": 100,
                 "type": "float"
             },
             {
                 "Name": "$INJECT5RATE4",
                 "Default": 79.5,
+                "lb": 60,
+                "ub": 100,
                 "type": "float"
             },
             {
                 "Name": "$INJECT6RATE4",
                 "Default": 79.5,
+                "lb": 60,
+                "ub": 100,
                 "type": "float"
             },
             {
                 "Name": "$INJECT7RATE4",
                 "Default": 79.5,
+                "lb": 60,
+                "ub": 100,
                 "type": "float"
             },
             {
                 "Name": "$INJECT8RATE4",
                 "Default": 79.5,
+                "lb": 60,
+                "ub": 100,
                 "type": "float"
             }
         ],
@@ -302,7 +398,8 @@
                         "L_threshold": 100.0
                     },
                 "options": {
-                    "budget" : 1000
+                    "budget" : 300,
+                    "max_points" : 50
                 }
             }
         }
