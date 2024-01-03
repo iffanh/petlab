@@ -360,6 +360,7 @@
             "parameters": 
             {
                 "maxIter": 100,
+                "optimizer": "DFTR",
                 "costFunction": "NPV",
                 "constraints": {
                     "FWPT": {
@@ -395,11 +396,11 @@
                         "kappa_tmd": 0.01,
                         "init_radius": 1.0,
                         "stopping_radius": 1E-5,
-                        "L_threshold": 100.0
+                        "L_threshold": 1.0
                     },
                 "options": {
-                    "budget" : 300,
-                    "max_points" : 50
+                    "budget" : 1000,
+                    "max_points" : 97
                 }
             }
         }

@@ -326,7 +326,7 @@ def cost_function(x, study_path, simulator_path):
             eqs.append(val)
     
     results = (-npv_cf, eqs, ineqs)
-    print(f"results = {results}")
+    # print(f"results = {results}")
     return results
 
 def get_n_constraints(constraints:dict):
@@ -355,44 +355,124 @@ def run_optimization(study_path, simulator_path):
     constraints = config['optimization']['parameters']['constraints']
     n_eq, n_ineq = get_n_constraints(constraints)
     
-    # define cost function
-    cf = lambda x, study_path=study_path, simulator_path=simulator_path: cost_function(x, study_path, simulator_path)[0]
-    eqs = [lambda x, study_path=study_path, simulator_path=simulator_path, i=i: cost_function(x, study_path, simulator_path)[1][i] for i in range(n_eq)]
-    ineqs = [lambda x, study_path=study_path, simulator_path=simulator_path, i=i: cost_function(x, study_path, simulator_path)[2][i] for i in range(n_ineq)]
-      
-    # define bounds
-    lb = []
-    ub = []
-    for c in controls:
-        try:
-            lb.append(c['lb'])
-        except:
-            lb.append(-np.inf)
+    optimizer = config['optimization']['parameters']['optimizer']
+    
+    if optimizer == "DFTR":
+        # define cost function
+        cf = lambda x, study_path=study_path, simulator_path=simulator_path: cost_function(x, study_path, simulator_path)[0]
+        eqs = [lambda x, study_path=study_path, simulator_path=simulator_path, i=i: cost_function(x, study_path, simulator_path)[1][i] for i in range(n_eq)]
+        ineqs = [lambda x, study_path=study_path, simulator_path=simulator_path, i=i: cost_function(x, study_path, simulator_path)[2][i] for i in range(n_ineq)]
+        
+        # define bounds
+        lb = []
+        ub = []
+        for c in controls:
+            try:
+                lb.append(c['lb'])
+            except:
+                lb.append(-np.inf)
+                
+            try:
+                ub.append(c['ub'])
+            except:
+                ub.append(np.inf)
+        
+        # ub = [c["ub"] for c in controls]
+        
+        # redefine constants
+        opt_constants = config['optimization']['parameters']['constants']
+        opts = config['optimization']['parameters']['options']
+        
+        tr = trsqp.TrustRegionSQPFilter(x0, 
+                                        k=Nc+1,
+                                        cf=cf,
+                                        lb=lb,
+                                        ub=ub,
+                                        eqcs=[*eqs],
+                                        ineqcs=[*ineqs],
+                                        constants=opt_constants,
+                                        opts=opts)
+        
+        tr.optimize(max_iter=config['optimization']['parameters']['maxIter'])
+        
+        out = save_iterations(tr)
+        
+        return out
+    
+    elif optimizer == 'COBYLA':
+        # define cost function
+        cf = lambda x, study_path=study_path, simulator_path=simulator_path: cost_function(x, study_path, simulator_path)[0]
+        _eqs = [lambda x, study_path=study_path, simulator_path=simulator_path, i=i: cost_function(x, study_path, simulator_path)[1][i] for i in range(n_eq)]
+        _ineqs = [lambda x, study_path=study_path, simulator_path=simulator_path, i=i: cost_function(x, study_path, simulator_path)[2][i] for i in range(n_ineq)]
+        
+        from scipy.optimize import minimize, LinearConstraint, NonlinearConstraint, SR1
+        eqs = [NonlinearConstraint(eq, 0, 0) for eq in _eqs]
+        ineqs = [NonlinearConstraint(eq, 0, np.inf) for eq in _ineqs]
+        
+        cons = []
+        
+        for eq in _eqs:
+            cons.append({
+                'type': 'eq',
+                'func': eq
+            })
             
-        try:
-            ub.append(c['ub'])
-        except:
-            ub.append(np.inf)
+        for ineq in _ineqs:
+            cons.append({
+                'type': 'ineq',
+                'func': ineq
+            })
+        
+        
+        # define bounds
+        bounds = []
+        for c in controls:
+            try:
+                lb = c['lb']
+            except:
+                lb = -np.inf
+                
+            try:
+                ub = c['ub']
+            except:
+                ub = np.inf
+                
+            bounds.append((lb, ub))
+            
+        def callback(x):
     
-    # ub = [c["ub"] for c in controls]
-    
-    # redefine constants
-    opt_constants = config['optimization']['parameters']['constants']
-    opts = config['optimization']['parameters']['options']
-    
-    tr = trsqp.TrustRegionSQPFilter(x0, 
-                                    k=Nc+1,
-                                    cf=cf,
-                                    lb=lb,
-                                    ub=ub,
-                                    eqcs=[*eqs],
-                                    ineqcs=[*ineqs],
-                                    constants=opt_constants,
-                                    opts=opts)
-    
-    tr.optimize(max_iter=config['optimization']['parameters']['maxIter'])
-    
-    return tr
+            result = cost_function(x, study_path, simulator_path)
+            
+            global OUT
+            OUT['f'].append(result[0])
+            OUT['x'].append(x.tolist())
+            OUT['v'].append(result[1])
+            OUT['v'].append(result[2])
+            
+            return
+            
+        global OUT
+        OUT = {}
+        OUT['f'] = []
+        OUT['x'] = []
+        OUT['v'] = []
+        
+        result = minimize(fun = cf, 
+                            x0 = x0,
+                            method = 'COBYLA', 
+                            constraints = eqs + ineqs,
+                            bounds=bounds,
+                            options={'maxiter': config['optimization']['parameters']['options']['budget']},
+                            callback=callback)
+        
+        OUT['nfev'] = result.nfev
+        OUT['status'] = result.status
+        OUT['message'] = result.message
+        OUT['maxcv'] = result.maxcv
+        
+        return OUT
+    else:
+        raise(f"Optimizer {optimizer} is not supported. Try 'DFTR' or 'COBYLA'.")
 
 def save_iterations(tr):
     
@@ -443,14 +523,13 @@ def main(args):
     timestamp = datetime.timestamp(now)
     dt_start = str(datetime.fromtimestamp(timestamp))
     study['extension']['start'] = dt_start
-    tr = run_optimization(study_path, simulator_path)
+    out = run_optimization(study_path, simulator_path)
     now = datetime.now()
     timestamp = datetime.timestamp(now)
     dt_end = str(datetime.fromtimestamp(timestamp))
     study['extension']['end'] = dt_end
     u.save_to_json(study_path, study)
     
-    out = save_iterations(tr)
     study['extension']['iterations'] = out
     
     study['status'] = "optimized"
