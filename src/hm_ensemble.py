@@ -253,6 +253,79 @@ def run_esmda(data, params):
     
     return static3d_post
 
+def run_pcesmda(data, params):
+    
+    """
+    Steps: 
+    1. Generate a surrogate model g based on the training data of M
+    2. Create a helper function that reduce the order model M to X, and D to Y
+    3. Call the ESMDA class and update in the full-order space in M but reduced-order space in Y
+    """
+    static3d = data['static3d']
+    sim_array = data['sim_array']
+    hist_vector = data['hist_vector']
+    darray = data['darray']
+    n_component = params['ncomponent']
+    polynomial_order = params['polynomial_order']
+
+    ofs = np.hstack(darray)
+    std = np.std(ofs, axis=0)
+    
+    _ofs = ofs.T[std > 0]/std[std > 0][:,np.newaxis]
+    _ofs = _ofs.T
+    
+    
+    def pce_model(m_train):
+        plsr = PLSRegression(params['ncomponent'])
+        scoresX, scoresY = plsr.fit_transform(m_train, sim_array)
+        
+        nodes = scoresX[:,:n_component].T
+        weights = np.ones(len(ofs))
+        J = []
+        for j in range(n_component):
+            d = chaospy.GaussianKDE(scoresX[:,j], h_mat=1E+1)
+            J.append(d)
+        joint = chaospy.J(*J)
+        
+        expansion = chaospy.generate_expansion(polynomial_order, joint, rule="three_terms_recurrence")
+        models = chaospy.fit_quadrature(expansion, nodes, weights, scoresY)
+        
+        return models, plsr
+    
+    models, plsr = pce_model(static3d)
+    _, hist_scoresY = plsr.transform(static3d, np.array([hist_vector]))
+    
+    def g_func(m):
+        
+        x = plsr.transform(np.array([m]))[0]
+        y = []
+        for model in models:
+            evaluation = model(*x)
+            y.append(evaluation)
+        return np.array(y)
+
+    esmda = ESMDA(m=static3d,
+                  g_func=g_func,
+                  g_obs=hist_scoresY[0],
+                  alphas=[9.333, 7.0, 4.0, 2.0],
+                  cd=np.ones(hist_scoresY.shape[1]))
+    
+    static3d_post, _ = esmda.run()
+    
+    # static3d_post = plsr.inverse_transform(scoresX_post)
+    # static3d_post = static3d_post + diff
+    
+    for j in range(static3d_post.shape[0]):
+        violated_cell_index = static3d_post[j,:] < np.min(static3d, axis=0)
+        static3d_post[j,:][violated_cell_index] = np.min(static3d, axis=0)[violated_cell_index]
+        
+        violated_cell_index = static3d_post[j,:] > np.max(static3d, axis=0)
+        static3d_post[j,:][violated_cell_index] = np.max(static3d, axis=0)[violated_cell_index]
+    
+    
+    return static3d_post
+
+
 def save_posterior(static3d_post, study_path):
     
     study = u.read_json(study_path)
@@ -268,7 +341,6 @@ def save_posterior(static3d_post, study_path):
     
     models = hm['model3d']
     
-    print(static3d_post)
     Ncell = int(static3d_post.shape[1]/len(models))
     
     posterior_paths = {}
@@ -319,6 +391,8 @@ def main(argv):
             hyperparameter = 3 
         elif method == 'ESMDA':
             hyperparameter = 4.0
+        elif method == 'PCESMDA':
+            hyperparameter = 3
     
     if method == "PLSR":
         params = {
@@ -346,8 +420,11 @@ def main(argv):
                   'alpha': hyperparameter}
         static3d_post = run_esmda(data, params)
         
-    
-    print(static3d_post)
+    elif method == 'PCESMDA':
+        params = {'ncomponent': ncomponent, 
+                  'polynomial_order': int(hyperparameter)}
+        static3d_post = run_pcesmda(data, params)
+        
     posterior_paths = save_posterior(static3d_post, study_path)
     
     now = datetime.now()
