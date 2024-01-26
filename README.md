@@ -1,5 +1,22 @@
 # petlab
 
+## An open-source framework for Closed-Loop Reservoir Management (CLRM). 
+
+As in CLRM, the two main frameworks featured in this tool are the History matching framework and the Reservoir optimization framework. However, this tool also has support features such as generation of geological realizations and extraction of simulation model results. 
+
+
+
+## History matching framework
+
+History match methods:
+1. Ensemble Smoother with Multiple Data Assimilation (ESMDA), 
+2. (New method) Partial Least Square Regression with Spectral Decomposition. 
+
+## Optimization framework
+
+Optimization methods:
+1. Trust-region method with SQP-Filter
+2. COBYLA
 
 <details><summary> <b> flash_calculation.py </b> </summary>
 

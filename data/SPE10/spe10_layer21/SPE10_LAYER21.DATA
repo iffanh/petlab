@@ -72,35 +72,35 @@ INIT
 -- OLDTRAN   
  
 DX
-  3600*20    /
+  3600*130    /
   -- 13200*20    /
 DY   
-  3600*20    /
+  3600*130    /
   -- 13200*20    /
 DZ     
   3600*20    /
   -- 13200*20    /
 
 INCLUDE
-   'TOPS_LAYER21.INC'
+   '../../../../data/SPE10/spe10_layer21/TOPS_LAYER21.INC'
 /
 -- In the PORO file, all the values equal to 0  have been replaced 
 -- by a minimum by a minimum value (1e-7) in order not to have 'dead cells'.
 
 INCLUDE 
-   'PORO_LAYER21.INC'
+   '../../../../data/SPE10/spe10_layer21/PORO_LAYER21.INC'
 /
 
 INCLUDE 
-   'PERMX_LAYER21.INC'
+   '../../../../data/SPE10/spe10_layer21/PERMX_LAYER21.INC'
 /
 
 INCLUDE 
-   'PERMY_LAYER21.INC'
+   '../../../../data/SPE10/spe10_layer21/PERMY_LAYER21.INC'
 /
 
 INCLUDE 
-   'PERMZ_LAYER21.INC'
+   '../../../../data/SPE10/spe10_layer21/PERMZ_LAYER21.INC'
 /
 
 
@@ -181,11 +181,31 @@ FOPT
 FWPT
 FWCT
 
+FGPR
+FGIR
+FWPR
+FWIR
+
 WBHP
-   'INJ'
+   'I1'
+   'I2'
+   'I3'
+/
+
+WWIR
+   'I1'
+   'I2'
+   'I3'
 /
 
 WOPR
+   'P1'
+   'P2'
+   'P3'
+   'P4'
+/
+
+WBHP
    'P1'
    'P2'
    'P3'
@@ -236,51 +256,34 @@ COMPDAT
 /
 
 WCONINJE
-'INJ'   'WATER'   'OPEN'   'RESV'   1*   5000    10000 /
+'INJ'   'WATER'   'OPEN'   'BHP'   2*   $I1BHP  /
 /
-
 
 WCONPROD
-'P1'     'OPEN'    'BHP'   5*   4000 /
-'P2'     'OPEN'    'BHP'   5*   4000 /
-'P3'     'OPEN'    'BHP'   5*   4000 /
-'P4'     'OPEN'    'BHP'   5*   4000 /
+'P1'     'OPEN'    'BHP'   5*   $P1BHP /
+'P2'     'OPEN'    'BHP'   5*   $P2BHP /
+'P3'     'OPEN'    'BHP'   5*   $P3BHP /
+'P4'     'OPEN'    'BHP'   5*   $P4BHP /
 /
 
-TSTEP
-1 2 3 4 5 5 10 10 20 20 30 30 30 30 50 50 17*100 /
+-- TSTEP
+--- 1 2 3 4 5 5 10 10 20 20 30 30 30 30 50 50 17*100 /
 
---DATES
--- $$$ 2  FEB 1967 /
--- $$$ 3  FEB 1967 /
--- $$$ 4  FEB 1967 /
--- $$$ 5  FEB 1967 /
--- $$$ 15 FEB 1967 /
--- $$$ 1  MAR 1967 /
--- $$$ 1  APR 1967 /
--- $$$ 1  MAY 1967 /
--- $$$ 1  AUG 1967 /
--- $$$ 1  NOV 1967 /
--- $$$ 1  FEB 1968 /
--- $$$ 1  MAY 1968 /
--- $$$ 1  AUG 1968 /
--- $$$ 1  NOV 1968 /
--- $$$ 1  FEB 1969 /
--- $$$ 1  MAY 1969 /
--- $$$ 1  AUG 1969 /
--- $$$ 1  NOV 1969 /
--- $$$ 1  FEB 1970 /
--- $$$ 1  MAY 1970 /
--- $$$ 1  AUG 1970 /
--- $$$ 1  NOV 1970 /
--- $$$ 1  FEB 1971 /
--- $$$ 1  MAY 1971 /
--- $$$ 1  AUG 1971 /
--- $$$ 1  NOV 1971 /
--- $$$ 1  FEB 1972 /
--- $$$ 1  MAY 1972 /
--- $$$ 24 JUL 1972 /
--- $$$ /
+TSTEP
+100 100 100 100 100 84 /
+
+TSTEP
+100 100 100 100 100 84 /
+
+TSTEP
+100 100 100 100 100 84 /
+
+TSTEP
+100 100 100 100 100 84 /
+
+TSTEP
+100 100 100 100 100 84 /
+
 
 END
 
