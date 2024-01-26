@@ -154,15 +154,15 @@ def calculate_npv(study, unit, summary_folder):
     """
     
     ## Define npv parameters
-    if unit == "METRIC":
-        ropr = 90.5 # oil price -- $/stb 
+    if unit == "FIELD":
+        ropr = 80.0 # oil price -- $/stb 
         rgpr = 1.5 # gas price -- $/Mscf
         
-        rwpr = 2.0 # water production cost -- $/stb
-        rwir = 2.0 # water injection cost -- $/stb
+        rwpr = 10.0 # water production cost -- $/stb
+        rwir = 5.0 # water injection cost -- $/stb
         rgir = 10.0 # gas injection cost -- $/Mscf
         
-    elif unit == "FIELD":
+    elif unit == "METRIC":
         
         ropr = 565.7 # oil price 90.5/0.16 -- $/sm3 
         rgpr = 0.0529 # gas price 1.5/28.316 -- $/sm3
