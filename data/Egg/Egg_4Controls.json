@@ -399,7 +399,7 @@
                     "L_threshold": 1.0
                 },
                 "options": {
-                    "budget" : 400,
+                    "budget" : 1000,
                     "max_points" : 97
                 }
             }
