@@ -299,6 +299,7 @@ TSTEP
 
 WCONINJE
 'INJ'   'WATER'   'OPEN'   'BHP'   2*   $I1BHP4  /
+/
 
 WCONPROD
 'P1'     'OPEN'    'BHP'   5*   $P1BHP4 /
@@ -312,6 +313,7 @@ TSTEP
 
 WCONINJE
 'INJ'   'WATER'   'OPEN'   'BHP'   2*   $I1BHP5  /
+/
 
 WCONPROD
 'P1'     'OPEN'    'BHP'   5*   $P1BHP5 /
