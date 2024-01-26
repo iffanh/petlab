@@ -1,0 +1,245 @@
+{
+    "Name": "IE_SPE10_L21_5C",
+    "Ne": 1,
+    "root": "./data/SPE10/spe10_layer21/SPE10_LAYER21_5C.DATA",
+    "n_parallel": 1,
+    "parameters":
+         [],
+   "controls":
+      [
+         {
+            "Name": "$I1BHP1",
+            "Default": 5000,
+            "lb": 4100,
+            "ub": 6000,
+            "type": "float"
+         },
+         {
+            "Name": "$P1BHP1",
+            "Default": 2000,
+            "lb": 1000,
+            "ub": 3500,
+            "type": "float"
+         },
+         {
+            "Name": "$P2BHP1",
+            "Default": 2000,
+            "lb": 1000,
+            "ub": 3500,
+            "type": "float"
+         },
+         {
+            "Name": "$P3BHP1",
+            "Default": 2000,
+            "lb": 1000,
+            "ub": 3500,
+            "type": "float"
+         },
+         {
+            "Name": "$P4BHP1",
+            "Default": 2000,
+            "lb": 1000,
+            "ub": 3500,
+            "type": "float"
+         },
+         {
+            "Name": "$I1BHP1",
+            "Default": 5000,
+            "lb": 4100,
+            "ub": 6000,
+            "type": "float"
+         },
+         {
+            "Name": "$P1BHP2",
+            "Default": 2000,
+            "lb": 1000,
+            "ub": 3500,
+            "type": "float"
+         },
+         {
+            "Name": "$P2BHP2",
+            "Default": 2000,
+            "lb": 1000,
+            "ub": 3500,
+            "type": "float"
+         },
+         {
+            "Name": "$P3BHP2",
+            "Default": 2000,
+            "lb": 1000,
+            "ub": 3500,
+            "type": "float"
+         },
+         {
+            "Name": "$P4BHP2",
+            "Default": 2000,
+            "lb": 1000,
+            "ub": 3500,
+            "type": "float"
+         },
+         {
+            "Name": "$I1BHP3",
+            "Default": 5000,
+            "lb": 4100,
+            "ub": 6000,
+            "type": "float"
+         },
+         {
+            "Name": "$P1BHP3",
+            "Default": 2000,
+            "lb": 1000,
+            "ub": 3500,
+            "type": "float"
+         },
+         {
+            "Name": "$P2BHP3",
+            "Default": 2000,
+            "lb": 1000,
+            "ub": 3500,
+            "type": "float"
+         },
+         {
+            "Name": "$P3BHP3",
+            "Default": 2000,
+            "lb": 1000,
+            "ub": 3500,
+            "type": "float"
+         },
+         {
+            "Name": "$P4BHP3",
+            "Default": 2000,
+            "lb": 1000,
+            "ub": 3500,
+            "type": "float"
+         },
+         {
+            "Name": "$I1BHP4",
+            "Default": 5000,
+            "lb": 4100,
+            "ub": 6000,
+            "type": "float"
+         },
+         {
+            "Name": "$P1BHP4",
+            "Default": 2000,
+            "lb": 1000,
+            "ub": 3500,
+            "type": "float"
+         },
+         {
+            "Name": "$P2BHP4",
+            "Default": 2000,
+            "lb": 1000,
+            "ub": 3500,
+            "type": "float"
+         },
+         {
+            "Name": "$P3BHP4",
+            "Default": 2000,
+            "lb": 1000,
+            "ub": 3500,
+            "type": "float"
+         },
+         {
+            "Name": "$P4BHP4",
+            "Default": 2000,
+            "lb": 1000,
+            "ub": 3500,
+            "type": "float"
+         },
+         {
+            "Name": "$I1BHP5",
+            "Default": 5000,
+            "lb": 4100,
+            "ub": 6000,
+            "type": "float"
+         },
+         {
+            "Name": "$P1BHP5",
+            "Default": 2000,
+            "lb": 1000,
+            "ub": 3500,
+            "type": "float"
+         },
+         {
+            "Name": "$P2BHP5",
+            "Default": 2000,
+            "lb": 1000,
+            "ub": 3500,
+            "type": "float"
+         },
+         {
+            "Name": "$P3BHP5",
+            "Default": 2000,
+            "lb": 1000,
+            "ub": 3500,
+            "type": "float"
+         },
+         {
+            "Name": "$P4BHP5",
+            "Default": 2000,
+            "lb": 1000,
+            "ub": 3500,
+            "type": "float"
+         }
+      ],
+   "historymatching":
+            {
+               "updatepath":"./data/SPE10/spe10model2/update",
+               "method": "PLSR",
+               "model3d": 
+                  [],
+               "timestep": "./data/SPE10/spe10model2/historic_data/summary/YEARS.npy",
+               "objectives":
+                  {}
+            },
+            "optimization": 
+            {
+                "parameters": 
+                {
+                    "maxIter": 20,
+                    "optimizer": "DFTR",
+                    "costFunction": "NPV",
+                    "constraints": {
+                        "FWPT": {
+                            "is_active": false,
+                            "value": 1000000,
+                            "type": "inequality",
+                            "robustness": {
+                                "type": "percentile",
+                                "value": 95
+                            }
+                        },
+                        "FGPT": {
+                            "is_active": false,
+                            "value": 250E+6,
+                            "type": "inequality",
+                            "robustness": {
+                                "type": "percentile",
+                                "value": 95
+                            }
+                        }
+                    },
+                    "constants": {
+                            "gamma_0": 0.5,
+                            "gamma_1": 0.8,
+                            "gamma_2": 2.0,
+                            "eta_1": 0.0001,
+                            "eta_2": 0.01,
+                            "mu": 0.01,
+                            "gamma_vartheta": 0.1,
+                            "kappa_vartheta": 0.0001,
+                            "kappa_radius": 0.8,
+                            "kappa_mu": 10,
+                            "kappa_tmd": 0.01,
+                            "init_radius": 1.0,
+                            "stopping_radius": 1E-5,
+                            "L_threshold": 1.0
+                        },
+                    "options": {
+                        "budget" : 200,
+                        "max_points" : 26
+                    }
+                }
+            }
+}

@@ -1,0 +1,328 @@
+-- This reservoir simulation is made available under the open Database 
+-- License: http://opendatacommons.org/licenses/odbl/1.0/
+-- Individual contents of the database are licensed under the Database contents
+-- License : http://opendatacommons.org/licenses/dbcl/1.0/
+
+
+
+-- Copyright(C) 2015 Statoil
+
+
+
+-- ===============================================================================
+-- SPE 10 - MODEL 2
+-- Simulation based on the followinf SPE paper:
+-- "Tenth SPE comparative solution project: a comparison of upscaling techniques"
+-- By Mike Christie (Heriot-Wat University) and Martin Blunt (Imperial College)
+-- SPE, August 2001
+-- ===============================================================================
+
+
+RUNSPEC
+
+TITLE
+    TENTH SPE COMPARATIVE SOLUTION PROJECT: A COMPARISON OF UPSCALING TECHNIQUES - MODEL 2
+
+DIMENS
+
+ 60  60   1  /
+
+-- NONNC
+
+
+OIL
+
+WATER
+
+GAS
+
+
+FIELD
+
+EQLDIMS
+  /
+
+TABDIMS
+  /
+
+WELLDIMS
+    5   340  1    5  /
+
+
+
+
+UNIFOUT
+
+START
+    1 'FEB' 1967  /
+
+
+
+--      =================================================
+------- In theis section, the geometry of the simulation 
+------- grid and the rock perøeabilities, porosities are
+------- defined.
+--      =================================================
+
+GRID
+
+
+INIT
+
+-- OLDTRAN   
+ 
+DX
+  3600*130    /
+  -- 13200*20    /
+DY   
+  3600*130    /
+  -- 13200*20    /
+DZ     
+  3600*20    /
+  -- 13200*20    /
+
+INCLUDE
+   '../../../../data/SPE10/spe10_layer21/TOPS_LAYER21.INC'
+/
+-- In the PORO file, all the values equal to 0  have been replaced 
+-- by a minimum by a minimum value (1e-7) in order not to have 'dead cells'.
+
+INCLUDE 
+   '../../../../data/SPE10/spe10_layer21/PORO_LAYER21.INC'
+/
+
+INCLUDE 
+   '../../../../data/SPE10/spe10_layer21/PERMX_LAYER21.INC'
+/
+
+INCLUDE 
+   '../../../../data/SPE10/spe10_layer21/PERMY_LAYER21.INC'
+/
+
+INCLUDE 
+   '../../../../data/SPE10/spe10_layer21/PERMZ_LAYER21.INC'
+/
+
+
+-- =======================================================
+PROPS
+
+
+--Sw	  Krw     Kro
+SWOF
+
+0.200	0.0000	1.0000  0
+0.250	0.0069	0.8403  0
+0.300	0.0278	0.6944  0
+0.350	0.0625	0.5625  0
+0.400	0.1111	0.4444  0
+0.450	0.1736	0.3403  0
+0.500	0.2500	0.2500  0
+0.550	0.3403	0.1736  0
+0.600	0.4444	0.1111  0
+0.650	0.5625	0.0625  0
+0.700	0.6944	0.0278  0
+0.750	0.8403	0.0069  0
+0.800	1.0000	0.0000  0  /
+
+
+
+-- No gas, but table needed because Flo is a 3-phase simulator 
+-- Sgmax is setto 0.8 to have coherent data with SWOF
+-- simplest table has been considered
+
+-- Sg             Krg              Kro            Pcgo
+SGOF
+ 0.000000	0		1.000000	0.000000
+ 0.800000	1		0.000000	0.000000   /  
+
+
+-- Oil  Wat   Gas
+DENSITY
+   53   64   0.0624  /
+
+PVDO
+   300   1.05  2.85  
+   800   1.02  2.99
+   8000  1.01  3
+/
+
+PVTW
+   6000  1.01  0.000003  0.3   0  /
+
+--PVT oif gas for 3-phi simulator flow - MADE UP DATA
+PVDG
+   14.7   178.1   0.005
+   8000   1       0.01
+/
+
+ROCK
+   6000    0.000001 
+/
+
+
+SOLUTION ========================================================
+
+EQUIL
+
+--    DATUM  DATUM   OWC    OWC    GOC    GOC    RSVD   RVVD   SOLN
+--    DEPTH  PRESS  DEPTH   PCOW  DEPTH   PCOG  TABLE  TABLE   METH
+
+      12000  6000   12170    0    12000    0     1*      1*      0   /
+
+
+SUMMARY ==========================================================
+
+RUNSUM
+
+FPR
+FOPR
+FOPT
+FWPT
+FWCT
+
+FGPR
+FGIR
+FWPR
+FWIR
+
+WBHP
+   'I1'
+   'I2'
+   'I3'
+/
+
+WWIR
+   'I1'
+   'I2'
+   'I3'
+/
+
+WOPR
+   'P1'
+   'P2'
+   'P3'
+   'P4'
+/
+
+WBHP
+   'P1'
+   'P2'
+   'P3'
+   'P4'
+/
+
+WWCT
+   'P1'
+   'P2'
+   'P3'
+   'P4'
+/
+
+WOPT
+   'P1'
+   'P2'
+   'P3'
+   'P4'
+/
+
+
+SCHEDULE =====================================================
+
+RPTRST
+    'BASIC=2'  /
+
+
+TUNING
+  /
+  /
+  2* 300 1* 12 /
+
+
+WELSPECS
+'INJ'    'G1'     30    30    12001    'WATER'  /
+'P1'     'G1'     1      1     12001    'OIL'    /
+'P2'     'G1'     60     1     12001    'OIL'    /
+'P3'     'G1'     60    60    12001    'OIL'    /
+'P4'     'G1'     1     60    12001    'OIL'    /
+/
+
+COMPDAT
+'INJ'    30   30   1   1   'OPEN'   2*   2  /
+'P1'     1    1     1   1   'OPEN'   2*   2  /
+'P2'     60   1     1   1   'OPEN'   2*   2  /
+'P3'     60   60   1   1   'OPEN'   2*   2  /
+'P4'     1    60   1   1   'OPEN'   2*   2  /
+/
+
+WCONINJE
+'INJ'   'WATER'   'OPEN'   'BHP'   2*   $I1BHP1  /
+/
+
+WCONPROD
+'P1'     'OPEN'    'BHP'   5*   $P1BHP1 /
+'P2'     'OPEN'    'BHP'   5*   $P2BHP1 /
+'P3'     'OPEN'    'BHP'   5*   $P3BHP1 /
+'P4'     'OPEN'    'BHP'   5*   $P4BHP1 /
+/
+
+TSTEP
+100 100 100 100 100 84 /
+
+WCONINJE
+'INJ'   'WATER'   'OPEN'   'BHP'   2*   $I1BHP2  /
+/
+
+WCONPROD
+'P1'     'OPEN'    'BHP'   5*   $P1BHP2 /
+'P2'     'OPEN'    'BHP'   5*   $P2BHP2 /
+'P3'     'OPEN'    'BHP'   5*   $P3BHP2 /
+'P4'     'OPEN'    'BHP'   5*   $P4BHP2 /
+/
+
+TSTEP
+100 100 100 100 100 84 /
+
+WCONINJE
+'INJ'   'WATER'   'OPEN'   'BHP'   2*   $I1BHP3  /
+/
+
+WCONPROD
+'P1'     'OPEN'    'BHP'   5*   $P1BHP3 /
+'P2'     'OPEN'    'BHP'   5*   $P2BHP3 /
+'P3'     'OPEN'    'BHP'   5*   $P3BHP3 /
+'P4'     'OPEN'    'BHP'   5*   $P4BHP3 /
+/
+
+TSTEP
+100 100 100 100 100 84 /
+
+WCONINJE
+'INJ'   'WATER'   'OPEN'   'BHP'   2*   $I1BHP4  /
+
+WCONPROD
+'P1'     'OPEN'    'BHP'   5*   $P1BHP4 /
+'P2'     'OPEN'    'BHP'   5*   $P2BHP4 /
+'P3'     'OPEN'    'BHP'   5*   $P3BHP4 /
+'P4'     'OPEN'    'BHP'   5*   $P4BHP4 /
+/
+
+TSTEP
+100 100 100 100 100 84 /
+
+WCONINJE
+'INJ'   'WATER'   'OPEN'   'BHP'   2*   $I1BHP5  /
+
+WCONPROD
+'P1'     'OPEN'    'BHP'   5*   $P1BHP5 /
+'P2'     'OPEN'    'BHP'   5*   $P2BHP5 /
+'P3'     'OPEN'    'BHP'   5*   $P3BHP5 /
+'P4'     'OPEN'    'BHP'   5*   $P4BHP5 /
+/
+
+TSTEP
+100 100 100 100 100 84 /
+
+
+END
+
