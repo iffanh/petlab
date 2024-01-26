@@ -16,8 +16,8 @@
                 "parameters": {
                         "mean": 300, 
                         "std": 50,
-                        "min": 20, 
-                        "max": 600,
+                        "min": 1, 
+                        "max": 500,
                         "type": "float"}
             }
          }],
