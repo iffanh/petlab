@@ -139,12 +139,12 @@ SGOF
 
 -- Oil  Wat   Gas
 DENSITY
-   53   64   0.0624  /
+   53.1   62.4   0.0624  /
 
 PVDO
-   300   1.05  2.85  
-   800   1.02  2.99
-   8000  1.01  3
+   300   1.05  0.48 
+   800   1.02  0.49
+   8000  1.01  0.5
 /
 
 PVTW
@@ -168,7 +168,7 @@ EQUIL
 --    DATUM  DATUM   OWC    OWC    GOC    GOC    RSVD   RVVD   SOLN
 --    DEPTH  PRESS  DEPTH   PCOW  DEPTH   PCOG  TABLE  TABLE   METH
 
-      12000  6000   12170    0    12000    0     1*      1*      0   /
+      8620  4012   12170    0    12000    0     1*      1*      0   /
 
 
 SUMMARY ==========================================================
@@ -179,6 +179,7 @@ FPR
 FOPR
 FOPT
 FWPT
+FGPT
 FWCT
 
 FGPR
@@ -188,14 +189,10 @@ FWIR
 
 WBHP
    'I1'
-   'I2'
-   'I3'
 /
 
 WWIR
    'I1'
-   'I2'
-   'I3'
 /
 
 WOPR
@@ -240,7 +237,7 @@ TUNING
 
 
 WELSPECS
-'INJ'    'G1'     30    30    12001    'WATER'  /
+'I1'    'G1'     30    30    12001    'WATER'  /
 'P1'     'G1'     1      1     12001    'OIL'    /
 'P2'     'G1'     60     1     12001    'OIL'    /
 'P3'     'G1'     60    60    12001    'OIL'    /
@@ -248,7 +245,7 @@ WELSPECS
 /
 
 COMPDAT
-'INJ'    30   30   1   1   'OPEN'   2*   2  /
+'I1'    30   30   1   1   'OPEN'   2*   2  /
 'P1'     1    1     1   1   'OPEN'   2*   2  /
 'P2'     60   1     1   1   'OPEN'   2*   2  /
 'P3'     60   60   1   1   'OPEN'   2*   2  /
@@ -256,7 +253,7 @@ COMPDAT
 /
 
 WCONINJE
-'INJ'   'WATER'   'OPEN'   'BHP'   2*   $I1BHP1  /
+'I1'   'WATER'   'OPEN'   'BHP'   2*   $I1BHP1  /
 /
 
 WCONPROD
@@ -270,7 +267,7 @@ TSTEP
 100 100 100 100 100 84 /
 
 WCONINJE
-'INJ'   'WATER'   'OPEN'   'BHP'   2*   $I1BHP2  /
+'I1'   'WATER'   'OPEN'   'BHP'   2*   $I1BHP2  /
 /
 
 WCONPROD
@@ -284,7 +281,7 @@ TSTEP
 100 100 100 100 100 84 /
 
 WCONINJE
-'INJ'   'WATER'   'OPEN'   'BHP'   2*   $I1BHP3  /
+'I1'   'WATER'   'OPEN'   'BHP'   2*   $I1BHP3  /
 /
 
 WCONPROD
@@ -298,7 +295,7 @@ TSTEP
 100 100 100 100 100 84 /
 
 WCONINJE
-'INJ'   'WATER'   'OPEN'   'BHP'   2*   $I1BHP4  /
+'I1'   'WATER'   'OPEN'   'BHP'   2*   $I1BHP4  /
 /
 
 WCONPROD
@@ -312,7 +309,7 @@ TSTEP
 100 100 100 100 100 84 /
 
 WCONINJE
-'INJ'   'WATER'   'OPEN'   'BHP'   2*   $I1BHP5  /
+'I1'   'WATER'   'OPEN'   'BHP'   2*   $I1BHP5  /
 /
 
 WCONPROD
