@@ -1,5 +1,5 @@
 {
-    "Name": "IE_SPE10_L21_5C",
+    "Name": "IE_SPE10_L21_5C_WWCT",
     "Ne": 1,
     "root": "./data/SPE10/spe10_layer21/ECL_5SPOT_5C.DATA",
     "n_parallel": 1,
@@ -201,24 +201,61 @@
                     "optimizer": "DFTR",
                     "costFunction": "NPV",
                     "constraints": {
-                        "FWPT": {
-                            "is_active": false,
-                            "value": 1000000,
+                        "WWCT:PROD1": {
+                            "is_active": true,
+                            "value": 0.95,
+                            "timestep": "all",
                             "type": "inequality",
+                            "wellname": "PROD1",
                             "robustness": {
                                 "type": "percentile",
                                 "value": 95
                             }
                         },
-                        "FGPT": {
-                            "is_active": false,
-                            "value": 250E+6,
-                            "type": "inequality",
-                            "robustness": {
-                                "type": "percentile",
-                                "value": 95
-                            }
-                        }
+                        "WWCT:PROD2": {
+                           "is_active": true,
+                           "value": 0.95,
+                           "timestep": "all",
+                           "type": "inequality",
+                           "wellname": "PROD2",
+                           "robustness": {
+                               "type": "percentile",
+                               "value": 95
+                           }
+                       },
+                       "WWCT:PROD3": {
+                        "is_active": true,
+                        "value": 0.95,
+                        "timestep": "all",
+                        "type": "inequality",
+                        "wellname": "PROD3",
+                        "robustness": {
+                            "type": "percentile",
+                            "value": 95
+                           }
+                       },
+                       "WWCT:PROD4": {
+                        "is_active": true,
+                        "value": 0.95,
+                        "timestep": "all",
+                        "type": "inequality",
+                        "wellname": "PROD4",
+                        "robustness": {
+                            "type": "percentile",
+                            "value": 95
+                           }
+                       },
+                       "FWCT": {
+                        "is_active": true,
+                        "value": 0.93,
+                        "timestep": "all",
+                        "type": "inequality",
+                        "wellname": "PROD4",
+                        "robustness": {
+                            "type": "percentile",
+                            "value": 95
+                           }
+                       }
                     },
                     "constants": {
                            "gamma_0": 0.6,

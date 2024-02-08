@@ -38,6 +38,7 @@ class SummaryKeys():
                      "WGIR",
                      "WOIR",
                      "FGOR",
+                     "FWCT",
                      "WFOR",
                      "WBHP",
                      "WWCT"]
@@ -80,7 +81,7 @@ def get_summary(realizations, storage):
     Path(data_dir).mkdir(parents=True, exist_ok=True)
     
     summary_dict = {}
-    pbar = tqdm(available_keys, total=len(available_keys), desc="Summary: ")
+    pbar = tqdm(available_keys, total=len(available_keys), desc="Summary: ", disable=True)
     for k in pbar:
         pbar.set_description(f"Extracting {k}")
         for casename in realizations:
@@ -125,7 +126,7 @@ def get_3dprops(realizations, storage):
     Path(data_dir).mkdir(parents=True, exist_ok=True)
     
     static3d_dict = {}
-    pbar = tqdm(static_available_keys, total=len(static_available_keys), desc="Static3D: ")
+    pbar = tqdm(static_available_keys, total=len(static_available_keys), desc="Static3D: ", disable=True)
     for k in pbar:
         pbar.set_description(f"Extracting {k}")
         for casename in realizations:
@@ -169,7 +170,7 @@ def get_3dprops(realizations, storage):
     Path(data_dir).mkdir(parents=True, exist_ok=True)
     
     dynamic3d_dict = {}
-    pbar = tqdm(dynamic_available_keys, total=len(dynamic_available_keys), desc="Dynamic3D: ")
+    pbar = tqdm(dynamic_available_keys, total=len(dynamic_available_keys), desc="Dynamic3D: ", disable=True)
     for k in pbar:
         pbar.set_description(f"Extracting {k}")
         for casename in realizations:
