@@ -1,0 +1,256 @@
+{
+    "Name": "IE_SPE10_L21_5C_ENS_COBYLA",
+    "Ne": 16,
+    "root": "./data/SPE10/spe10_layer21_ensemble/ECL_5SPOT_5C.DATA",
+    "n_parallel": 16,
+    "parameters":
+         [
+            {
+            "Name": "$SWOFFILE", 
+            "Type": "IncrementalText",
+            "Distribution": {
+               "parameters": {
+                       "prefix": "../../../../data/SPE10/spe10_layer21_ensemble/include/SWOF_",
+                       "suffix": ".INC"    
+                   }
+               }
+            }
+      ],
+   "controls":
+      [
+         {
+            "Name": "$I1BHP1",
+            "Default": 414,
+            "lb": 282,
+            "ub": 414,
+            "type": "float"
+         },
+         {
+            "Name": "$P1BHP1",
+            "Default": 69,
+            "lb": 69,
+            "ub": 241,
+            "type": "float"
+         },
+         {
+            "Name": "$P2BHP1",
+            "Default": 69,
+            "lb": 69,
+            "ub": 241,
+            "type": "float"
+         },
+         {
+            "Name": "$P3BHP1",
+            "Default": 69,
+            "lb": 69,
+            "ub": 241,
+            "type": "float"
+         },
+         {
+            "Name": "$P4BHP1",
+            "Default": 69,
+            "lb": 69,
+            "ub": 241,
+            "type": "float"
+         },
+         {
+            "Name": "$I1BHP2",
+            "Default": 414,
+            "lb": 282,
+            "ub": 414,
+            "type": "float"
+         },
+         {
+            "Name": "$P1BHP2",
+            "Default": 69,
+            "lb": 69,
+            "ub": 241,
+            "type": "float"
+         },
+         {
+            "Name": "$P2BHP2",
+            "Default": 69,
+            "lb": 69,
+            "ub": 241,
+            "type": "float"
+         },
+         {
+            "Name": "$P3BHP2",
+            "Default": 69,
+            "lb": 69,
+            "ub": 241,
+            "type": "float"
+         },
+         {
+            "Name": "$P4BHP2",
+            "Default": 69,
+            "lb": 69,
+            "ub": 241,
+            "type": "float"
+         },
+         {
+            "Name": "$I1BHP3",
+            "Default": 414,
+            "lb": 282,
+            "ub": 414,
+            "type": "float"
+         },
+         {
+            "Name": "$P1BHP3",
+            "Default": 69,
+            "lb": 69,
+            "ub": 241,
+            "type": "float"
+         },
+         {
+            "Name": "$P2BHP3",
+            "Default": 69,
+            "lb": 69,
+            "ub": 241,
+            "type": "float"
+         },
+         {
+            "Name": "$P3BHP3",
+            "Default": 69,
+            "lb": 69,
+            "ub": 241,
+            "type": "float"
+         },
+         {
+            "Name": "$P4BHP3",
+            "Default": 69,
+            "lb": 69,
+            "ub": 241,
+            "type": "float"
+         },
+         {
+            "Name": "$I1BHP4",
+            "Default": 414,
+            "lb": 282,
+            "ub": 414,
+            "type": "float"
+         },
+         {
+            "Name": "$P1BHP4",
+            "Default": 69,
+            "lb": 69,
+            "ub": 241,
+            "type": "float"
+         },
+         {
+            "Name": "$P2BHP4",
+            "Default": 69,
+            "lb": 69,
+            "ub": 241,
+            "type": "float"
+         },
+         {
+            "Name": "$P3BHP4",
+            "Default": 69,
+            "lb": 69,
+            "ub": 241,
+            "type": "float"
+         },
+         {
+            "Name": "$P4BHP4",
+            "Default": 69,
+            "lb": 69,
+            "ub": 241,
+            "type": "float"
+         },
+         {
+            "Name": "$I1BHP5",
+            "Default": 414,
+            "lb": 282,
+            "ub": 414,
+            "type": "float"
+         },
+         {
+            "Name": "$P1BHP5",
+            "Default": 69,
+            "lb": 69,
+            "ub": 241,
+            "type": "float"
+         },
+         {
+            "Name": "$P2BHP5",
+            "Default": 69,
+            "lb": 69,
+            "ub": 241,
+            "type": "float"
+         },
+         {
+            "Name": "$P3BHP5",
+            "Default": 69,
+            "lb": 69,
+            "ub": 241,
+            "type": "float"
+         },
+         {
+            "Name": "$P4BHP5",
+            "Default": 69,
+            "lb": 69,
+            "ub": 241,
+            "type": "float"
+         }
+      ],
+   "historymatching":
+            {
+               "updatepath":"./data/SPE10/spe10model2/update",
+               "method": "PLSR",
+               "model3d": 
+                  [],
+               "timestep": "./data/SPE10/spe10model2/historic_data/summary/YEARS.npy",
+               "objectives":
+                  {}
+            },
+            "optimization": 
+            {
+                "parameters": 
+                {
+                    "maxIter": 100,
+                    "optimizer": "COBYLA",
+                    "costFunction": "NPV",
+                    "constraints": {
+                        "FWPT": {
+                            "is_active": false,
+                            "value": 1000000,
+                            "type": "inequality",
+                            "robustness": {
+                                "type": "percentile",
+                                "value": 95
+                            }
+                        },
+                        "FGPT": {
+                            "is_active": false,
+                            "value": 250E+6,
+                            "type": "inequality",
+                            "robustness": {
+                                "type": "percentile",
+                                "value": 95
+                            }
+                        }
+                    },
+                    "constants": {
+                           "gamma_0": 0.6,
+                           "gamma_1": 0.8,
+                           "gamma_2": 1.5,
+                           "eta_1": 1E-12,
+                           "eta_2": 1E-11,
+                            "mu": 0.01,
+                            "gamma_vartheta": 0.1,
+                            "kappa_vartheta": 0.0001,
+                            "kappa_radius": 0.8,
+                            "kappa_mu": 10,
+                            "kappa_tmd": 0.01,
+                            "init_radius": 0.5,
+                            "stopping_radius": 1E-5,
+                            "L_threshold": 1.0
+                        },
+                    "options": {
+                        "budget" : 1000,
+                        "max_points" : 51
+                    }
+                }
+            }
+}
