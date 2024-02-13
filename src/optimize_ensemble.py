@@ -286,7 +286,10 @@ def cost_function(x, study_path, simulator_path):
     controls = config['controls']
     
     for i, control in enumerate(controls):
-        control["Default"] = x[i]
+        try:
+            control["Default"] = x[i]
+        except TypeError: # for NOMAD
+            control["Default"] = x.get_coord(i)
     
     simfolder_path = study['extension']['storage']
     try:
@@ -401,7 +404,6 @@ def cost_function(x, study_path, simulator_path):
             eqs.append(val)
     
     results = (-npv_cf, eqs, ineqs)
-    # print(f"results = {results}")
     return results
 
 def get_n_constraints(constraints:dict):
@@ -565,8 +567,58 @@ def run_optimization(study_path, simulator_path):
         OUT['maxcv'] = result.maxcv
         
         return OUT
+    
+    elif optimizer == "NOMAD":
+        
+        import PyNomad #must install PyNomadBBO package
+        
+        cf = lambda x, study_path=study_path, simulator_path=simulator_path: cost_function(x, study_path, simulator_path)[0]
+        _eqs = [lambda x, study_path=study_path, simulator_path=simulator_path, i=i: cost_function(x, study_path, simulator_path)[1][i] for i in range(n_eq)]
+        _ineqs = [lambda x, study_path=study_path, simulator_path=simulator_path, i=i: cost_function(x, study_path, simulator_path)[2][i] for i in range(n_ineq)]
+        
+        # define bb that is compatible with the package
+        def bb(x):
+            
+            f = cf(x)
+            
+            rawBBO = str(f) + " "
+            
+            for _ineq in _ineqs:
+                rawBBO += str(_ineq(x)) + " "
+                INEQS += "EB "
+            
+            x.setBBO(rawBBO.encode("UTF-8"))
+            
+            return 1
+        
+        INEQS = ""
+        for _ in _ineqs:
+            INEQS += "EB "
+        
+        # define bounds
+        lb = [c['lb'] for c in controls]
+        ub = [c['ub'] for c in controls]
+            
+        X0 = x0
+        params = [f"DIMENSION {len(x0)}", 
+                  f"BB_OUTPUT_TYPE OBJ {INEQS}", 
+                  f"MAX_BB_EVAL {config['optimization']['parameters']['options']['budget']}",
+                  f"DISPLAY_DEGREE 2",
+                  f"DISPLAY_ALL_EVAL true"]
+        
+        result = PyNomad.optimize(bb, X0, lb, ub, params)
+        
+        fmt = ["{} = {}".format(n,v) for (n,v) in result.items()]
+        output = "\n".join(fmt)
+        print("\nNOMAD results \n" + output + " \n")
+
+        OUT = {}
+        return OUT
     else:
         raise(f"Optimizer {optimizer} is not supported. Try 'DFTR' or 'COBYLA'.")
+    
+    
+    
 
 def save_iterations(tr):
     
