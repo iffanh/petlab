@@ -584,8 +584,7 @@ def run_optimization(study_path, simulator_path):
             rawBBO = str(f) + " "
             
             for _ineq in _ineqs:
-                rawBBO += str(_ineq(x)) + " "
-                INEQS += "EB "
+                rawBBO += str(-_ineq(x)) + " "
             
             x.setBBO(rawBBO.encode("UTF-8"))
             
@@ -604,7 +603,8 @@ def run_optimization(study_path, simulator_path):
                   f"BB_OUTPUT_TYPE OBJ {INEQS}", 
                   f"MAX_BB_EVAL {config['optimization']['parameters']['options']['budget']}",
                   f"DISPLAY_DEGREE 2",
-                  f"DISPLAY_ALL_EVAL true"]
+                  f"DISPLAY_ALL_EVAL true",
+                  f"DISPLAY_STATS BBE BBO"]
         
         result = PyNomad.optimize(bb, X0, lb, ub, params)
         
@@ -613,6 +613,11 @@ def run_optimization(study_path, simulator_path):
         print("\nNOMAD results \n" + output + " \n")
 
         OUT = {}
+        OUT['x_best'] = result['x_best']
+        OUT['f_best'] = result['f_best']
+        OUT['nb_evals'] = result['nb_evals']
+        OUT['stop_reason'] = result['stop_reason']
+        
         return OUT
     else:
         raise(f"Optimizer {optimizer} is not supported. Try 'DFTR' or 'COBYLA'.")

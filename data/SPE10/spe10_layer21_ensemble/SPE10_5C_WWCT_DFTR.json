@@ -1,5 +1,5 @@
 {
-    "Name": "IE_SPE10_L21_5C_WWCT_ENS",
+    "Name": "IE_SPE10_L21_5C_WWCT_ENS_DFTR",
     "Ne": 16,
     "root": "./data/SPE10/spe10_layer21_ensemble/ECL_5SPOT_5C.DATA",
     "n_parallel": 16,

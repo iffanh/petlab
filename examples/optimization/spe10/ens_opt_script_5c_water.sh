@@ -1,7 +1,7 @@
-METHOD="DFTR"
+METHOD="NOMAD"
 
-CONFIG_FILE="data/SPE10/spe10_layer21/SPE10_5C_WWCT_${METHOD}.json"
-STUDY_PATH="simulations/studies/IE_SPE10_L21_5C_WWCT_${METHOD}.json"
+CONFIG_FILE="data/SPE10/spe10_layer21_ensemble/SPE10_5C_WATER_${METHOD}.json"
+STUDY_PATH="simulations/studies/IE_SPE10_L21_5C_WATER_ENS_${METHOD}.json"
 
 SIMULATOR_PATH="/usr/bin/flow"
 
