@@ -184,7 +184,23 @@ def replace_random_field(d:dict):
         model = gs.Gaussian(dim=3, var=1, len_scale=scale, angles=angles)
         srf = gs.SRF(model)
         srf((x, y, z), mesh_type='structured')
+        # print(srf.field)
+        fieldcdf = scipy.stats.norm.cdf(srf.field[:-1, :-1, :-1], 0, 1)
         
+        a = (np.log(p['min']) - np.log(p['mean'])) / np.log(p['std'])
+        b = (np.log(p['max']) - np.log(p['mean'])) / np.log(p['std'])
+        var = scipy.stats.truncnorm.ppf(fieldcdf, a, b)
+        
+        var = np.exp(var*np.log(p["std"]) + np.log(p["mean"]))
+        var = np.reshape(var, (size[0]*size[1]*size[2]), order="F")
+        
+    elif d["name"] == "LogNormal-ArcSin":
+        from gstools import transform as tf
+        model = gs.Gaussian(dim=3, var=1, len_scale=scale, angles=angles)
+        srf = gs.SRF(model)
+        srf((x, y, z), mesh_type='structured')
+        # print(srf.field)
+        tf.normal_to_arcsin(srf)
         fieldcdf = scipy.stats.norm.cdf(srf.field[:-1, :-1, :-1], 0, 1)
         
         a = (np.log(p['min']) - np.log(p['mean'])) / np.log(p['std'])
