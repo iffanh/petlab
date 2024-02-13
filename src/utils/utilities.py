@@ -21,19 +21,20 @@ def run_bash_commands_in_parallel(commands, max_tries, n_parallel):
     """
     # we use a tuple of (command, tries) to store the information
     # how often a command was already tried.
-    waiting = deque([(command, 1) for command in commands])
+    
+    waiting = deque([(command, 1, i) for i, command in enumerate(commands)]) #(command, #of tries, realizationindex)
     running = deque()
-
-    pbar = tqdm(total=len(waiting))
+    is_success = [False]*len(waiting) # list of whether the simulation is a success or not
+    
+    pbar = tqdm(total=len(waiting), disable=True)
     while len(waiting) > 0 or len(running) > 0:
-        # print(f'Running: {len(running)}, Waiting: {len(waiting)}')
 
         # if less than n_parallel jobs are running and we have waiting jobs,
         # start new jobs
         while len(waiting) > 0 and len(running) < n_parallel:
-            command, tries = waiting.popleft()
+            command, tries, index = waiting.popleft()
             try:
-                running.append((subprocess.Popen(command, stdout=DEVNULL), command, tries))
+                running.append((subprocess.Popen(command, stdout=DEVNULL), command, tries, index))
                 # print(f"Started task {command}. Running: {len(running)}, Waiting: {len(waiting)}")
                 pbar.set_description(f"Running: {len(running)}, Waiting: {len(waiting)}")
             except OSError:
@@ -41,10 +42,10 @@ def run_bash_commands_in_parallel(commands, max_tries, n_parallel):
 
         # poll running commands 
         for _ in range(len(running)):
-            process, command, tries = running.popleft()
+            process, command, tries, index = running.popleft()
             ret = process.poll()
             if ret is None:
-                running.append((process, command, tries))
+                running.append((process, command, tries, index))
             # retry errored jobs
             elif ret != 0:
                 if tries < max_tries:
@@ -54,13 +55,15 @@ def run_bash_commands_in_parallel(commands, max_tries, n_parallel):
                     pbar.update(1)
             else:
                 # print(f'Command {command} finished successfully')
+                is_success[index] = True
                 pbar.update(1)
                 
         # sleep a bit to reduce CPU usage
         time.sleep(0.5)
     pbar.set_description(f'All simulation done')
     pbar.close()
-    
+    return is_success
+
 def hashable_lru(func):
     cache = lru_cache(maxsize=1024)
 

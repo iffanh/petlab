@@ -2,7 +2,13 @@
 
 ## An open-source framework for Closed-Loop Reservoir Management (CLRM). 
 
-As in CLRM, the two main frameworks featured in this tool are the History matching framework and the Reservoir optimization framework. However, this tool also has support features such as generation of geological realizations and extraction of simulation model results. 
+As in CLRM, the two main frameworks featured in this tool are the History matching framework and the Reservoir optimization framework. However, this tool also has support features such as generation of geological realizations and extraction of simulation model results. There are 5 main modules: 
+
+1. Create ensemble : creating an ensemble by populating the values based on some distributions.  
+2. Run ensemble : running the ensemble 
+3. Extract ensemble : extracting the result from the ensemble that has been run
+4. Optimize ensemble : finding the most optimal control based on some objective function
+5. History match ensemble : updating the ensemble to match the historical data 
 
 
 
@@ -17,6 +23,11 @@ History match methods:
 Optimization methods:
 1. Trust-region method with SQP-Filter
 2. COBYLA
+
+
+## Configuring a study
+
+
 
 <details><summary> <b> flash_calculation.py </b> </summary>
 

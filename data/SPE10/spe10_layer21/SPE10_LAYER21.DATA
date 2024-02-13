@@ -179,6 +179,7 @@ FPR
 FOPR
 FOPT
 FWPT
+FGPT
 FWCT
 
 FGPR
@@ -188,14 +189,10 @@ FWIR
 
 WBHP
    'I1'
-   'I2'
-   'I3'
 /
 
 WWIR
    'I1'
-   'I2'
-   'I3'
 /
 
 WOPR

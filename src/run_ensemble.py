@@ -50,7 +50,7 @@ def run_cases(simulator_path, study, simfolder_path, controls, n_parallel):
     commands = []
     realizations = {}
     l = len(base_realizations)
-    for i, real_name in tqdm(enumerate(base_realizations.keys()), total=l, desc="Preparing: "):
+    for i, real_name in tqdm(enumerate(base_realizations.keys()), total=l, desc="Preparing: ", leave=False):
         
         real_name = root_name + '_%s'%(i+1) # SPE1_i
         
@@ -63,8 +63,9 @@ def run_cases(simulator_path, study, simfolder_path, controls, n_parallel):
         commands.append(command)
         realizations[real_name] = real_datafile_path
         
-    u.run_bash_commands_in_parallel(commands, max_tries=1, n_parallel=n_parallel)
-    return realizations
+    is_success = u.run_bash_commands_in_parallel(commands, max_tries=1, n_parallel=n_parallel)
+    
+    return realizations, is_success
         
 def main(argv):
 
@@ -85,7 +86,7 @@ def main(argv):
     Path(simfolder_path).mkdir(parents=True, exist_ok=True)
     
     config = u.read_json(study['creation']['json'])
-    realizations = run_cases(simulator_path, study, simfolder_path, config['controls'], n_parallel=config['n_parallel'])
+    realizations, is_success = run_cases(simulator_path, study, simfolder_path, config['controls'], n_parallel=config['n_parallel'])
     now = datetime.now()
     timestamp = datetime.timestamp(now)
     dt_end = str(datetime.fromtimestamp(timestamp))

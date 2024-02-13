@@ -158,17 +158,17 @@ def calculate_npv(study, unit, summary_folder):
         ropr = 80.0 # oil price -- $/stb 
         rgpr = 1.5 # gas price -- $/Mscf
         
-        rwpr = 10.0 # water production cost -- $/stb
-        rwir = 5.0 # water injection cost -- $/stb
-        rgir = 10.0 # gas injection cost -- $/Mscf
+        rwpr = 10.0 # 20.0 # water production cost -- $/stb
+        rwir = 5.0 # 20.0 # water injection cost -- $/stb
+        rgir = 2.0 # gas injection cost -- $/Mscf
         
     elif unit == "METRIC":
         
-        ropr = 565.7 # oil price 90.5/0.16 -- $/sm3 
+        ropr = 503.185 # oil price 90.5/0.16 -- $/sm3 
         rgpr = 0.0529 # gas price 1.5/28.316 -- $/sm3
         
-        rwpr = 12.5 # water production cost 2.0/0.16 -- $/sm3
-        rwir = 12.5 # water injection cost 2.0/0.16 -- $/sm3
+        rwpr = 62.9 # 125.796 # water production cost 2.0/0.16 -- $/sm3
+        rwir = 31.5 # water injection cost 2.0/0.16 -- $/sm3
         rgir = 0.353 # gas injection cost 10.0/28.316 -- $/sm3
     
     
@@ -189,18 +189,44 @@ def calculate_npv(study, unit, summary_folder):
     
     npv_arr = []
     for i, real in enumerate(realizations):
+        cashflow = 0
         years = np.load(summary_folder[real]["YEARS"]) 
-        fopr = np.load(summary_folder[real]["FOPR"])
-        fwpr = np.load(summary_folder[real]["FWPR"])
-        fgpr = np.load(summary_folder[real]["FGPR"])
         
-        fgir = np.load(summary_folder[real]["FGIR"])
-        fwir = np.load(summary_folder[real]["FWIR"])
-            
+        try:
+            fopr = np.load(summary_folder[real]["FOPR"])
+            cashflow += fopr*ropr
+        except KeyError:
+            pass
+        
+        try:
+            fwpr = np.load(summary_folder[real]["FWPR"])
+            cashflow += -fwpr*rwpr
+        except KeyError:
+            pass
+        
+        try:
+            fgpr = np.load(summary_folder[real]["FGPR"])
+            cashflow += fgpr*rgpr
+        except KeyError:
+            pass
+        
+        try:
+            fgir = np.load(summary_folder[real]["FGIR"])
+            cashflow += -fgir*rgir
+        except KeyError:
+            pass
+        
+        try:
+            fwir = np.load(summary_folder[real]["FWIR"])
+            cashflow += -fwir*rwir
+        except KeyError:
+            pass
+        
         tM = len(years)
         
         dy = np.diff(years, prepend=0)
-        cashflow = (fopr*ropr + fgpr*rgpr - fwpr*rwpr - fgir*rgir - fwir*rwir)*dy*365
+        # cashflow = (fopr*ropr + fgpr*rgpr - fwpr*rwpr - fgir*rgir - fwir*rwir)*dy*365
+        cashflow = cashflow*dy*365
         npv = []
 
         for tn in range(tN):
@@ -264,8 +290,13 @@ def cost_function(x, study_path, simulator_path):
     
     simfolder_path = study['extension']['storage']
     try:
-        run_ensemble.run_cases(simulator_path, study, simfolder_path, controls, n_parallel=config['n_parallel'])
+        realizations, is_success = run_ensemble.run_cases(simulator_path, study, simfolder_path, controls, n_parallel=config['n_parallel'])
+        
     except RuntimeError:
+        return (-np.nan, np.nan, np.nan)
+    
+    # print(is_success)
+    if not any(is_success): #every realization is 'false' (failed)
         return (-np.nan, np.nan, np.nan)
     
     realizations = study['extension']['realizations'] 
@@ -282,15 +313,17 @@ def cost_function(x, study_path, simulator_path):
         unit = get_unit(study)
         study = calculate_npv(study, unit, summary)
         npv_path = study['extension']['optimization']['NPV']
-        npv_arr = np.load(npv_path)
-        npv_T = np.cumsum(npv_arr, axis=1)[:,-1]
-        npv_cf = np.mean(npv_T, axis=0)
+        npv_arr = np.load(npv_path)[:, is_success]
+        # npv_T = np.cumsum(npv_arr, axis=1)[:,-1]
+        npv_T = np.cumsum (npv_arr, axis=0)
+        npv_cf = np.mean(npv_T, axis=1)[-1]
         
     else:
         raise NotImplementedError(f"Cost function of type {cf_type} has not been implemented yet.")
         
     eqs = []
     ineqs = []
+    
     # constraints
     constraints = config['optimization']['parameters']['constraints']
     for c, d in constraints.items():
@@ -298,27 +331,69 @@ def cost_function(x, study_path, simulator_path):
         if not d['is_active']:
             continue 
         
-        summary = study['extension']['optimization']['summary']
+        def pick_timestep(vector:np.ndarray, d:dict):
+            if d['timestep'] == 'all':
+                return np.max(vector)
+            elif d['timestep'] == 'last':
+                return vector[-1]
+            else:
+                raise Exception(f"'timestep' must be 'all' or 'last'. Found {d['timestep']}.")
+
+        def compute_normalized_constraint(vector:list, d:dict):
+            vector = np.array(vector)[is_success]
+            val = calc_stats(vector, d['robustness']['type'], d['robustness']['value'])
+            val = (d['value'] - val)/abs(d['value']) 
+            return val
+        
         if c == "FWPT":
-            fwpts = []
+            v_list = []
             for casename in summary.keys():  
-                fwpt = np.load(summary[casename]['FWPT'])[-1]
-                fwpts.append(fwpt)
-                
-            val = calc_stats(fwpts, d['robustness']['type'], d['robustness']['value'])
-            val = (d['value'] - val)/abs(d['value'])
+                vector = np.load(summary[casename]['FWPT'])
+                val = pick_timestep(vector, d)
+                v_list.append(val)
+           
+            val = compute_normalized_constraint(v_list, d)     
             
-        elif c == "FGPT":
-            fgpts = []
+        elif "WWPT" in c:
+            well = d["wellname"]
+            v_list = []
             for casename in summary.keys():  
-                fgpt = np.load(summary[casename]['FGPT'])[-1]
-                fgpts.append(fgpt)
-                
-            val = calc_stats(fgpts, d['robustness']['type'], d['robustness']['value'])
-            val = (d['value'] - val)/abs(d['value'])
+                vector = np.load(summary[casename][f'WWPT:{well}'])
+                val = pick_timestep(vector, d)
+                v_list.append(val)
+
+            val = compute_normalized_constraint(v_list, d)    
+        
+        elif c == "FWCT":
+            v_list = []
+            for casename in summary.keys():  
+                vector = np.load(summary[casename]['FWCT'])
+                val = pick_timestep(vector, d)
+                v_list.append(val)
+           
+            val = compute_normalized_constraint(v_list, d)     
+            
+        elif "WWCT" in c:
+            well = d["wellname"]
+            v_list = []
+            for casename in summary.keys():  
+                vector = np.load(summary[casename][f'WWCT:{well}'])
+                val = pick_timestep(vector, d)
+                v_list.append(val)
+
+            val = compute_normalized_constraint(v_list, d) 
+
+        elif c == "FGPT":
+            v_list = []
+            for casename in summary.keys():  
+                vector = np.load(summary[casename]['FGPT'])
+                val = pick_timestep(vector, d)
+                v_list.append(val)
+           
+            val = compute_normalized_constraint(v_list, d)
         
         else:
-            raise NotImplementedError(f"Constraints of type {c} has not been implemented yet.")
+            raise NotImplementedError(f"Constraint of type {c} has not been implemented yet.")
         
         if d['type'] == "inequality":
             ineqs.append(val)
@@ -384,7 +459,6 @@ def run_optimization(study_path, simulator_path):
         opts = config['optimization']['parameters']['options']
         
         tr = trsqp.TrustRegionSQPFilter(x0, 
-                                        k=Nc+1,
                                         cf=cf,
                                         lb=lb,
                                         ub=ub,
@@ -393,7 +467,26 @@ def run_optimization(study_path, simulator_path):
                                         constants=opt_constants,
                                         opts=opts)
         
+        
         tr.optimize(max_iter=config['optimization']['parameters']['maxIter'])
+        
+        cost_function.cache_clear()
+        
+        # run best points
+        print("run the latest ...")
+        # cost_function(tr.iterates[-1]["y_curr"], study_path, simulator_path)
+
+        xsol = tr.iterates[-1]["y_curr"]
+        study = u.read_json(study_path)
+        config = u.read_json(study['creation']['json'])
+        controls = config['controls']
+        
+        for i, control in enumerate(controls):
+            control["Default"] = xsol[i]
+        
+        simfolder_path = study['extension']['storage']
+        realizations, is_success = run_ensemble.run_cases(simulator_path, study, simfolder_path, controls, n_parallel=config['n_parallel'])
+        print(is_success)
         
         out = save_iterations(tr)
         
@@ -464,6 +557,7 @@ def run_optimization(study_path, simulator_path):
                             bounds=bounds,
                             options={'maxiter': config['optimization']['parameters']['options']['budget']},
                             callback=callback)
+    
         
         OUT['nfev'] = result.nfev
         OUT['status'] = result.status
@@ -493,6 +587,11 @@ def save_iterations(tr):
     for t in tr.iterates:
         neval.append(t["number_of_function_calls"])
     out["neval"] = neval
+    
+    total_neval = []
+    for t in tr.iterates:
+        total_neval.append(t["total_number_of_function_calls"])
+    out["total_neval"] = total_neval
 
     v = []
     for t in tr.iterates:
