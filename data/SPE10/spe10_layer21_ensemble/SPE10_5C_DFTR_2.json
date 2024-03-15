@@ -1,5 +1,5 @@
 {
-    "Name": "IE_SPE10_L21_5C_WATER_ENS_DFTR",
+    "Name": "IE_SPE10_L21_5C_ENS_DFTR_2",
     "Ne": 16,
     "root": "./data/SPE10/spe10_layer21_ensemble/ECL_5SPOT_5C.DATA",
     "n_parallel": 16,
@@ -10,185 +10,185 @@
             "Type": "IncrementalText",
             "Distribution": {
                "parameters": {
-                     "prefix": "../../../../data/SPE10/spe10_layer21_ensemble/include/SWOF_",
-                     "suffix": ".INC"    
-                  }
+                       "prefix": "../../../../data/SPE10/spe10_layer21_ensemble/include/SWOF_",
+                       "suffix": ".INC"    
+                   }
                }
             }
-         ],
+      ],
    "controls":
       [
          {
             "Name": "$I1BHP1",
-            "Default": 414,
+            "Default": 348,
             "lb": 282,
             "ub": 414,
             "type": "float"
          },
          {
             "Name": "$P1BHP1",
-            "Default": 69,
+            "Default": 155,
             "lb": 69,
             "ub": 241,
             "type": "float"
          },
          {
             "Name": "$P2BHP1",
-            "Default": 69,
+            "Default": 155,
             "lb": 69,
             "ub": 241,
             "type": "float"
          },
          {
             "Name": "$P3BHP1",
-            "Default": 69,
+            "Default": 155,
             "lb": 69,
             "ub": 241,
             "type": "float"
          },
          {
             "Name": "$P4BHP1",
-            "Default": 69,
+            "Default": 155,
             "lb": 69,
             "ub": 241,
             "type": "float"
          },
          {
             "Name": "$I1BHP2",
-            "Default": 414,
+            "Default": 348,
             "lb": 282,
             "ub": 414,
             "type": "float"
          },
          {
             "Name": "$P1BHP2",
-            "Default": 69,
+            "Default": 155,
             "lb": 69,
             "ub": 241,
             "type": "float"
          },
          {
             "Name": "$P2BHP2",
-            "Default": 69,
+            "Default": 155,
             "lb": 69,
             "ub": 241,
             "type": "float"
          },
          {
             "Name": "$P3BHP2",
-            "Default": 69,
+            "Default": 155,
             "lb": 69,
             "ub": 241,
             "type": "float"
          },
          {
             "Name": "$P4BHP2",
-            "Default": 69,
+            "Default": 155,
             "lb": 69,
             "ub": 241,
             "type": "float"
          },
          {
             "Name": "$I1BHP3",
-            "Default": 414,
+            "Default": 348,
             "lb": 282,
             "ub": 414,
             "type": "float"
          },
          {
             "Name": "$P1BHP3",
-            "Default": 69,
+            "Default": 155,
             "lb": 69,
             "ub": 241,
             "type": "float"
          },
          {
             "Name": "$P2BHP3",
-            "Default": 69,
+            "Default": 155,
             "lb": 69,
             "ub": 241,
             "type": "float"
          },
          {
             "Name": "$P3BHP3",
-            "Default": 69,
+            "Default": 155,
             "lb": 69,
             "ub": 241,
             "type": "float"
          },
          {
             "Name": "$P4BHP3",
-            "Default": 69,
+            "Default": 155,
             "lb": 69,
             "ub": 241,
             "type": "float"
          },
          {
             "Name": "$I1BHP4",
-            "Default": 414,
+            "Default": 348,
             "lb": 282,
             "ub": 414,
             "type": "float"
          },
          {
             "Name": "$P1BHP4",
-            "Default": 69,
+            "Default": 155,
             "lb": 69,
             "ub": 241,
             "type": "float"
          },
          {
             "Name": "$P2BHP4",
-            "Default": 69,
+            "Default": 155,
             "lb": 69,
             "ub": 241,
             "type": "float"
          },
          {
             "Name": "$P3BHP4",
-            "Default": 69,
+            "Default": 155,
             "lb": 69,
             "ub": 241,
             "type": "float"
          },
          {
             "Name": "$P4BHP4",
-            "Default": 69,
+            "Default": 155,
             "lb": 69,
             "ub": 241,
             "type": "float"
          },
          {
             "Name": "$I1BHP5",
-            "Default": 414,
+            "Default": 348,
             "lb": 282,
             "ub": 414,
             "type": "float"
          },
          {
             "Name": "$P1BHP5",
-            "Default": 69,
+            "Default": 155,
             "lb": 69,
             "ub": 241,
             "type": "float"
          },
          {
             "Name": "$P2BHP5",
-            "Default": 69,
+            "Default": 155,
             "lb": 69,
             "ub": 241,
             "type": "float"
          },
          {
             "Name": "$P3BHP5",
-            "Default": 69,
+            "Default": 155,
             "lb": 69,
             "ub": 241,
             "type": "float"
          },
          {
             "Name": "$P4BHP5",
-            "Default": 69,
+            "Default": 155,
             "lb": 69,
             "ub": 241,
             "type": "float"
@@ -212,60 +212,24 @@
                     "optimizer": "DFTR",
                     "costFunction": "NPV",
                     "constraints": {
-                        "WWPT:PROD1": {
-                            "is_active": true,
-                            "value": 60000,
-                            "timestep": "last",
+                        "FWPT": {
+                            "is_active": false,
+                            "value": 1000000,
                             "type": "inequality",
-                            "wellname": "PROD1",
                             "robustness": {
                                 "type": "percentile",
                                 "value": 95
                             }
                         },
-                        "WWPT:PROD2": {
-                           "is_active": true,
-                           "value": 10000000,
-                           "timestep": "last",
-                           "type": "inequality",
-                           "wellname": "PROD2",
-                           "robustness": {
-                               "type": "percentile",
-                               "value": 95
-                           }
-                       },
-                       "WWPT:PROD3": {
-                        "is_active": true,
-                        "value": 3000000,
-                        "timestep": "last",
-                        "type": "inequality",
-                        "wellname": "PROD3",
-                        "robustness": {
-                            "type": "percentile",
-                            "value": 95
-                           }
-                       },
-                       "WWPT:PROD4": {
-                        "is_active": true,
-                        "value": 800000,
-                        "timestep": "last",
-                        "type": "inequality",
-                        "wellname": "PROD4",
-                        "robustness": {
-                            "type": "percentile",
-                            "value": 95
-                           }
-                       },
-                       "FWPT": {
-                        "is_active": true,
-                        "value": 12000000,
-                        "timestep": "last",
-                        "type": "inequality",
-                        "robustness": {
-                            "type": "percentile",
-                            "value": 95
-                           }
-                       }
+                        "FGPT": {
+                            "is_active": false,
+                            "value": 250E+6,
+                            "type": "inequality",
+                            "robustness": {
+                                "type": "percentile",
+                                "value": 95
+                            }
+                        }
                     },
                     "constants": {
                            "gamma_0": 0.6,

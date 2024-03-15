@@ -1,0 +1,256 @@
+{
+    "Name": "IE_SPE10_L21_5C_ENS_NOMAD_7",
+    "Ne": 16,
+    "root": "./data/SPE10/spe10_layer21_ensemble/ECL_5SPOT_5C.DATA",
+    "n_parallel": 16,
+    "parameters":
+         [
+            {
+            "Name": "$SWOFFILE", 
+            "Type": "IncrementalText",
+            "Distribution": {
+               "parameters": {
+                       "prefix": "../../../../data/SPE10/spe10_layer21_ensemble/include/SWOF_",
+                       "suffix": ".INC"    
+                   }
+               }
+            }
+      ],
+   "controls":
+         [
+            {
+               "Name": "$I1BHP1",
+               "Default": 366.3480421989596,
+               "lb": 282,
+               "ub": 414,
+               "type": "float"
+            },
+            {
+               "Name": "$P1BHP1",
+               "Default": 192.28864357977596,
+               "lb": 69,
+               "ub": 241,
+               "type": "float"
+            },
+            {
+               "Name": "$P2BHP1",
+               "Default": 73.90650301065067,
+               "lb": 69,
+               "ub": 241,
+               "type": "float"
+            },
+            {
+               "Name": "$P3BHP1",
+               "Default": 239.06640426108873,
+               "lb": 69,
+               "ub": 241,
+               "type": "float"
+            },
+            {
+               "Name": "$P4BHP1",
+               "Default": 208.1976877549037,
+               "lb": 69,
+               "ub": 241,
+               "type": "float"
+            },
+            {
+               "Name": "$I1BHP2",
+               "Default": 332.32469774094733,
+               "lb": 282,
+               "ub": 414,
+               "type": "float"
+            },
+            {
+               "Name": "$P1BHP2",
+               "Default": 173.67150711009396,
+               "lb": 69,
+               "ub": 241,
+               "type": "float"
+            },
+            {
+               "Name": "$P2BHP2",
+               "Default": 233.63054389679414,
+               "lb": 69,
+               "ub": 241,
+               "type": "float"
+            },
+            {
+               "Name": "$P3BHP2",
+               "Default": 238.12228626926978,
+               "lb": 69,
+               "ub": 241,
+               "type": "float"
+            },
+            {
+               "Name": "$P4BHP2",
+               "Default": 93.18661780303268,
+               "lb": 69,
+               "ub": 241,
+               "type": "float"
+            },
+            {
+               "Name": "$I1BHP3",
+               "Default": 355.7926178928739,
+               "lb": 282,
+               "ub": 414,
+               "type": "float"
+            },
+            {
+               "Name": "$P1BHP3",
+               "Default": 81.70249062451578,
+               "lb": 69,
+               "ub": 241,
+               "type": "float"
+            },
+            {
+               "Name": "$P2BHP3",
+               "Default": 186.68770322454344,
+               "lb": 69,
+               "ub": 241,
+               "type": "float"
+            },
+            {
+               "Name": "$P3BHP3",
+               "Default": 191.46178750046386,
+               "lb": 69,
+               "ub": 241,
+               "type": "float"
+            },
+            {
+               "Name": "$P4BHP3",
+               "Default": 170.13092627509087,
+               "lb": 69,
+               "ub": 241,
+               "type": "float"
+            },
+            {
+               "Name": "$I1BHP4",
+               "Default": 354.5663163104958,
+               "lb": 282,
+               "ub": 414,
+               "type": "float"
+            },
+            {
+               "Name": "$P1BHP4",
+               "Default": 231.45303302530684,
+               "lb": 69,
+               "ub": 241,
+               "type": "float"
+            },
+            {
+               "Name": "$P2BHP4",
+               "Default": 178.43080230001817,
+               "lb": 69,
+               "ub": 241,
+               "type": "float"
+            },
+            {
+               "Name": "$P3BHP4",
+               "Default": 176.76468774379495,
+               "lb": 69,
+               "ub": 241,
+               "type": "float"
+            },
+            {
+               "Name": "$P4BHP4",
+               "Default": 198.16038256214512,
+               "lb": 69,
+               "ub": 241,
+               "type": "float"
+            },
+            {
+               "Name": "$I1BHP5",
+               "Default": 365.5280770770766,
+               "lb": 282,
+               "ub": 414,
+               "type": "float"
+            },
+            {
+               "Name": "$P1BHP5",
+               "Default": 238.70346159957978,
+               "lb": 69,
+               "ub": 241,
+               "type": "float"
+            },
+            {
+               "Name": "$P2BHP5",
+               "Default": 116.5180279159502,
+               "lb": 69,
+               "ub": 241,
+               "type": "float"
+            },
+            {
+               "Name": "$P3BHP5",
+               "Default": 92.9194122381917,
+               "lb": 69,
+               "ub": 241,
+               "type": "float"
+            },
+            {
+               "Name": "$P4BHP5",
+               "Default": 133.59846340519925,
+               "lb": 69,
+               "ub": 241,
+               "type": "float"
+            }
+      ],
+   "historymatching":
+            {
+               "updatepath":"./data/SPE10/spe10model2/update",
+               "method": "PLSR",
+               "model3d": 
+                  [],
+               "timestep": "./data/SPE10/spe10model2/historic_data/summary/YEARS.npy",
+               "objectives":
+                  {}
+            },
+            "optimization": 
+            {
+                "parameters": 
+                {
+                    "maxIter": 100,
+                    "optimizer": "NOMAD",
+                    "costFunction": "NPV",
+                    "constraints": {
+                        "FWPT": {
+                            "is_active": false,
+                            "value": 1000000,
+                            "type": "inequality",
+                            "robustness": {
+                                "type": "percentile",
+                                "value": 95
+                            }
+                        },
+                        "FGPT": {
+                            "is_active": false,
+                            "value": 250E+6,
+                            "type": "inequality",
+                            "robustness": {
+                                "type": "percentile",
+                                "value": 95
+                            }
+                        }
+                    },
+                    "constants": {
+                           "gamma_0": 0.6,
+                           "gamma_1": 0.8,
+                           "gamma_2": 1.5,
+                           "eta_1": 1E-12,
+                           "eta_2": 1E-11,
+                            "mu": 0.01,
+                            "gamma_vartheta": 0.1,
+                            "kappa_vartheta": 0.0001,
+                            "kappa_radius": 0.8,
+                            "kappa_mu": 10,
+                            "kappa_tmd": 0.01,
+                            "init_radius": 0.5,
+                            "stopping_radius": 1E-5,
+                            "L_threshold": 1.0
+                        },
+                    "options": {
+                        "budget" : 1000,
+                        "max_points" : 51
+                    }
+                }
+            }
+}
