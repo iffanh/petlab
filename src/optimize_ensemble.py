@@ -1,15 +1,24 @@
 import numpy as np
 import sys
-import utils.utilities as u
-import utils.deck_parser as dp
-import run_ensemble
-import extract_ensemble
+
+try:
+    from .utils import utilities as u
+    from .utils import deck_parser as dp
+    from . import run_ensemble
+    from . import extract_ensemble
+except ImportError:
+    import utils.utilities as u
+    import utils.deck_parser as dp
+    import run_ensemble
+    import extract_ensemble
+    
 import py_trsqp.trsqp as trsqp
 
 import os
 from datetime import datetime
 
 from pathlib import Path
+
 
 STORAGE_DIR = './simulations/storage/'
 STUDIES_DIR = './simulations/studies/'
@@ -298,6 +307,9 @@ def cost_function(x, study_path, simulator_path):
     except RuntimeError:
         return (-np.nan, np.nan, np.nan)
     
+    except TimeoutError:
+        return (-np.nan, np.nan, np.nan)
+    
     # print(is_success)
     if not any(is_success): #every realization is 'false' (failed)
         return (-np.nan, np.nan, np.nan)
@@ -490,6 +502,10 @@ def run_optimization(study_path, simulator_path):
         realizations, is_success = run_ensemble.run_cases(simulator_path, study, simfolder_path, controls, n_parallel=config['n_parallel'])
         print(is_success)
         
+        storage = study['extension']['storage']
+        summary = extract_ensemble.get_summary(realizations, storage)
+        study = calculate_npv(study, get_unit(study), summary)
+
         out = save_iterations(tr)
         
         return out
@@ -611,6 +627,25 @@ def run_optimization(study_path, simulator_path):
         fmt = ["{} = {}".format(n,v) for (n,v) in result.items()]
         output = "\n".join(fmt)
         print("\nNOMAD results \n" + output + " \n")
+        
+        # run best points
+        print("run the latest ...")
+        # cost_function(tr.iterates[-1]["y_curr"], study_path, simulator_path)
+
+        study = u.read_json(study_path)
+        config = u.read_json(study['creation']['json'])
+        controls = config['controls']
+        
+        for i, control in enumerate(controls):
+            control["Default"] = result['x_best'][i]
+        
+        simfolder_path = study['extension']['storage']
+        realizations, is_success = run_ensemble.run_cases(simulator_path, study, simfolder_path, controls, n_parallel=config['n_parallel'])
+        print(is_success)
+        
+        storage = study['extension']['storage']
+        summary = extract_ensemble.get_summary(realizations, storage)
+        study = calculate_npv(study, get_unit(study), summary)
 
         OUT = {}
         OUT['x_best'] = result['x_best']
@@ -619,8 +654,79 @@ def run_optimization(study_path, simulator_path):
         OUT['stop_reason'] = result['stop_reason']
         
         return OUT
+    
+    elif optimizer == "BO":
+        
+        from bayes_opt import BayesianOptimization
+        from scipy.optimize import NonlinearConstraint
+                
+        pbounds = {f'x_{i}': (c['lb'], c['ub']) for i,c in enumerate(controls)}
+        
+        # define cost function
+        cf = lambda x, study_path=study_path, simulator_path=simulator_path: - (cost_function(x, study_path, simulator_path)[0])
+        eqs = [lambda x, study_path=study_path, simulator_path=simulator_path, i=i: cost_function(x, study_path, simulator_path)[1][i] for i in range(n_eq)]
+        ineqs = [lambda x, study_path=study_path, simulator_path=simulator_path, i=i: cost_function(x, study_path, simulator_path)[2][i] for i in range(n_ineq)]
+        
+        
+        def constraint_function(**kwargs):
+            return np.array([
+                ineq(np.array([_x for _,_x in kwargs.items()])) for ineq in ineqs
+            ])
+        
+        constraint = NonlinearConstraint(constraint_function, np.array([0]*len(ineqs)), np.array([np.inf]*len(ineqs)))
+
+
+        def _cf(**kwargs):
+            return cf(np.array([_x for _,_x in kwargs.items()]))
+
+
+        optimizer = BayesianOptimization(
+                            f=_cf,
+                            constraint=constraint,
+                            pbounds=pbounds,
+                            verbose=1, # verbose = 1 prints only when a maximum is observed, verbose = 0 is silent
+                            random_state=1,
+                        )
+        
+        optimizer.maximize(
+                    init_points=len(controls),
+                    n_iter=config['optimization']['parameters']['options']['budget'],
+                )
+        
+         # run best points
+        print("run the latest ...")
+        # cost_function(tr.iterates[-1]["y_curr"], study_path, simulator_path)
+
+        study = u.read_json(study_path)
+        config = u.read_json(study['creation']['json'])
+        controls = config['controls']
+        
+        for i, control in enumerate(controls):
+            control["Default"] = optimizer.max['params'][f"x_{i}"]
+        
+        simfolder_path = study['extension']['storage']
+        realizations, is_success = run_ensemble.run_cases(simulator_path, study, simfolder_path, controls, n_parallel=config['n_parallel'])
+        print(is_success)
+        
+        storage = study['extension']['storage']
+        summary = extract_ensemble.get_summary(realizations, storage)
+        study = calculate_npv(study, get_unit(study), summary)
+
+        OUT = {}
+
+        OUT['best'] = optimizer.max
+        OUT['best']['constraint'] = OUT['best']['constraint'].tolist()
+
+        OUT['xs'] = optimizer.res
+
+        for i, xs in enumerate(optimizer.res):
+            OUT['xs'][i]['constraint'] = optimizer.res[i]['constraint'].tolist()
+            OUT['xs'][i]['allowed'] = bool(optimizer.res[i]['allowed'])
+        
+        return OUT
+        
     else:
-        raise(f"Optimizer {optimizer} is not supported. Try 'DFTR' or 'COBYLA'.")
+        raise(f"Optimizer {optimizer} is not supported. Try 'DFTR', 'NOMAD', 'BO' or 'COBYLA'.")
     
     
     

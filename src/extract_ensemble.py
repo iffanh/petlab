@@ -3,7 +3,10 @@ from ecl.summary import EclSum
 # from ecl.grid import EclGrid
 # from ecl.eclfile import Ecl3DFile, EclRestartFile
 import ecl.eclfile
-import utils.utilities as u
+try:
+    from .utils import utilities as u
+except ImportError:
+    import utils.utilities as u 
 import numpy as np
 import os
 from pathlib import Path
