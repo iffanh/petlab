@@ -1,15 +1,24 @@
 import numpy as np
 import sys
-import utils.utilities as u
-import utils.deck_parser as dp
-import run_ensemble
-import extract_ensemble
+
+try:
+    from .utils import utilities as u
+    from .utils import deck_parser as dp
+    from . import run_ensemble
+    from . import extract_ensemble
+except ImportError:
+    import utils.utilities as u
+    import utils.deck_parser as dp
+    import run_ensemble
+    import extract_ensemble
+    
 import py_trsqp.trsqp as trsqp
 
 import os
 from datetime import datetime
 
 from pathlib import Path
+
 
 STORAGE_DIR = './simulations/storage/'
 STUDIES_DIR = './simulations/studies/'
@@ -298,6 +307,9 @@ def cost_function(x, study_path, simulator_path):
     except RuntimeError:
         return (-np.nan, np.nan, np.nan)
     
+    except TimeoutError:
+        return (-np.nan, np.nan, np.nan)
+    
     # print(is_success)
     if not any(is_success): #every realization is 'false' (failed)
         return (-np.nan, np.nan, np.nan)
@@ -490,6 +502,10 @@ def run_optimization(study_path, simulator_path):
         realizations, is_success = run_ensemble.run_cases(simulator_path, study, simfolder_path, controls, n_parallel=config['n_parallel'])
         print(is_success)
         
+        storage = study['extension']['storage']
+        summary = extract_ensemble.get_summary(realizations, storage)
+        study = calculate_npv(study, get_unit(study), summary)
+
         out = save_iterations(tr)
         
         return out
@@ -568,6 +584,92 @@ def run_optimization(study_path, simulator_path):
         
         return OUT
     
+    elif optimizer == 'COBYQA':
+        # define cost function
+        cf = lambda x, study_path=study_path, simulator_path=simulator_path: cost_function(x, study_path, simulator_path)[0]
+        _eqs = [lambda x, study_path=study_path, simulator_path=simulator_path, i=i: cost_function(x, study_path, simulator_path)[1][i] for i in range(n_eq)]
+        _ineqs = [lambda x, study_path=study_path, simulator_path=simulator_path, i=i: cost_function(x, study_path, simulator_path)[2][i] for i in range(n_ineq)]
+        
+        from scipy.optimize import LinearConstraint, NonlinearConstraint, SR1
+        from cobyqa import minimize
+        eqs = [NonlinearConstraint(eq, 0, 0) for eq in _eqs]
+        ineqs = [NonlinearConstraint(eq, 0, np.inf) for eq in _ineqs]
+        
+        cons = []
+        
+        for eq in _eqs:
+            cons.append({
+                'type': 'eq',
+                'func': eq
+            })
+            
+        for ineq in _ineqs:
+            cons.append({
+                'type': 'ineq',
+                'func': ineq
+            })
+        
+        
+        # define bounds
+        bounds = []
+        for c in controls:
+            try:
+                lb = c['lb']
+            except:
+                lb = -np.inf
+                
+            try:
+                ub = c['ub']
+            except:
+                ub = np.inf
+                
+            bounds.append((lb, ub))
+            
+        def callback(x):
+    
+            result = cost_function(x, study_path, simulator_path)
+            
+            global OUT_COBYQA
+            OUT_COBYQA['f'].append(result[0])
+            OUT_COBYQA['x'].append(x.tolist())
+            OUT_COBYQA['v'].append(result[1])
+            OUT_COBYQA['v'].append(result[2])
+            
+            return
+            
+        global OUT_COBYQA
+        OUT_COBYQA = {}
+        OUT_COBYQA['f'] = []
+        OUT_COBYQA['x'] = []
+        OUT_COBYQA['v'] = []
+        
+        opt_constants = config['optimization']['parameters']['constants']
+        
+        result = minimize(fun = cf, 
+                            x0 = x0,
+                            constraints = eqs + ineqs,
+                            bounds=bounds,
+                            options={'maxiter': config['optimization']['parameters']['maxIter'],
+                                     'maxfev': config['optimization']['parameters']['options']['budget'],
+                                     'low_ratio': opt_constants['eta_1'],
+                                     'high_ratio': opt_constants['eta_2'],
+                                     'very_low_ratio': 1E-16,
+                                     'decrease_radius_factor': opt_constants['gamma_0'],
+                                     'increase_radius_factor': opt_constants['gamma_1'],
+                                     'store_history': True,
+                                     'radius_final': opt_constants['stopping_radius']},
+                            callback=callback)
+    
+        
+        OUT_COBYQA['nfev'] = result.nfev
+        OUT_COBYQA['status'] = result.status
+        OUT_COBYQA['message'] = result.message
+        OUT_COBYQA['maxcv'] = result.maxcv
+        OUT_COBYQA['fun_history'] = list(result.fun_history)
+        OUT_COBYQA['maxcv_history'] = list(result.maxcv_history)
+        
+        return OUT_COBYQA
+    
     elif optimizer == "NOMAD":
         
         import PyNomad #must install PyNomadBBO package
@@ -584,8 +686,7 @@ def run_optimization(study_path, simulator_path):
             rawBBO = str(f) + " "
             
             for _ineq in _ineqs:
-                rawBBO += str(_ineq(x)) + " "
-                INEQS += "EB "
+                rawBBO += str(-_ineq(x)) + " "
             
             x.setBBO(rawBBO.encode("UTF-8"))
             
@@ -604,18 +705,114 @@ def run_optimization(study_path, simulator_path):
                   f"BB_OUTPUT_TYPE OBJ {INEQS}", 
                   f"MAX_BB_EVAL {config['optimization']['parameters']['options']['budget']}",
                   f"DISPLAY_DEGREE 2",
-                  f"DISPLAY_ALL_EVAL true"]
+                  f"DISPLAY_ALL_EVAL true",
+                  f"DISPLAY_STATS BBE BBO"]
         
         result = PyNomad.optimize(bb, X0, lb, ub, params)
         
         fmt = ["{} = {}".format(n,v) for (n,v) in result.items()]
         output = "\n".join(fmt)
         print("\nNOMAD results \n" + output + " \n")
+        
+        # run best points
+        print("run the latest ...")
+        # cost_function(tr.iterates[-1]["y_curr"], study_path, simulator_path)
+
+        study = u.read_json(study_path)
+        config = u.read_json(study['creation']['json'])
+        controls = config['controls']
+        
+        for i, control in enumerate(controls):
+            control["Default"] = result['x_best'][i]
+        
+        simfolder_path = study['extension']['storage']
+        realizations, is_success = run_ensemble.run_cases(simulator_path, study, simfolder_path, controls, n_parallel=config['n_parallel'])
+        print(is_success)
+        
+        storage = study['extension']['storage']
+        summary = extract_ensemble.get_summary(realizations, storage)
+        study = calculate_npv(study, get_unit(study), summary)
 
         OUT = {}
+        OUT['x_best'] = result['x_best']
+        OUT['f_best'] = result['f_best']
+        OUT['nb_evals'] = result['nb_evals']
+        OUT['stop_reason'] = result['stop_reason']
+        
         return OUT
+    
+    elif optimizer == "BO":
+        
+        from bayes_opt import BayesianOptimization
+        from scipy.optimize import NonlinearConstraint
+                
+        pbounds = {f'x_{i}': (c['lb'], c['ub']) for i,c in enumerate(controls)}
+        
+        # define cost function
+        cf = lambda x, study_path=study_path, simulator_path=simulator_path: - (cost_function(x, study_path, simulator_path)[0])
+        eqs = [lambda x, study_path=study_path, simulator_path=simulator_path, i=i: cost_function(x, study_path, simulator_path)[1][i] for i in range(n_eq)]
+        ineqs = [lambda x, study_path=study_path, simulator_path=simulator_path, i=i: cost_function(x, study_path, simulator_path)[2][i] for i in range(n_ineq)]
+        
+        
+        def constraint_function(**kwargs):
+            return np.array([
+                ineq(np.array([_x for _,_x in kwargs.items()])) for ineq in ineqs
+            ])
+        
+        constraint = NonlinearConstraint(constraint_function, np.array([0]*len(ineqs)), np.array([np.inf]*len(ineqs)))
+
+
+        def _cf(**kwargs):
+            return cf(np.array([_x for _,_x in kwargs.items()]))
+
+
+        optimizer = BayesianOptimization(
+                            f=_cf,
+                            constraint=constraint,
+                            pbounds=pbounds,
+                            verbose=1, # verbose = 1 prints only when a maximum is observed, verbose = 0 is silent
+                            random_state=1,
+                        )
+        
+        optimizer.maximize(
+                    init_points=len(controls),
+                    n_iter=config['optimization']['parameters']['options']['budget'],
+                )
+        
+         # run best points
+        print("run the latest ...")
+        # cost_function(tr.iterates[-1]["y_curr"], study_path, simulator_path)
+
+        study = u.read_json(study_path)
+        config = u.read_json(study['creation']['json'])
+        controls = config['controls']
+        
+        for i, control in enumerate(controls):
+            control["Default"] = optimizer.max['params'][f"x_{i}"]
+        
+        simfolder_path = study['extension']['storage']
+        realizations, is_success = run_ensemble.run_cases(simulator_path, study, simfolder_path, controls, n_parallel=config['n_parallel'])
+        print(is_success)
+        
+        storage = study['extension']['storage']
+        summary = extract_ensemble.get_summary(realizations, storage)
+        study = calculate_npv(study, get_unit(study), summary)
+
+        OUT = {}
+
+        OUT['best'] = optimizer.max
+        OUT['best']['constraint'] = OUT['best']['constraint'].tolist()
+
+        OUT['xs'] = optimizer.res
+
+        for i, xs in enumerate(optimizer.res):
+            OUT['xs'][i]['constraint'] = optimizer.res[i]['constraint'].tolist()
+            OUT['xs'][i]['allowed'] = bool(optimizer.res[i]['allowed'])
+        
+        return OUT
+        
     else:
-        raise(f"Optimizer {optimizer} is not supported. Try 'DFTR' or 'COBYLA'.")
+        raise(f"Optimizer {optimizer} is not supported. Try 'DFTR', 'NOMAD', 'BO' or 'COBYLA'.")
     
     
     

@@ -21,7 +21,7 @@ def mutate_case(root_datafile_path, real_datafile_path, parameters, case_number)
         filedata = file.read()
 
     # parameters
-    pbar = tqdm(parameters, total=len(parameters), leave=False, desc="Populating properties: ", disable=True)
+    pbar = tqdm(parameters, total=len(parameters), leave=False, desc="Populating properties: ", disable=False)
     for param in pbar:
         
         Name = param["Name"]
@@ -56,7 +56,7 @@ def mutate_cases(data, root_datafile_path):
     Path(base_ens_path).mkdir(parents=True, exist_ok=True)
 
     real_files = {}
-    pbar = tqdm(range(1, data['Ne']+1), total=data['Ne'], desc="Case: ", disable=True)
+    pbar = tqdm(range(1, data['Ne']+1), total=data['Ne'], desc="Case: ", disable=False)
     for i in pbar:
         real_name = root_name + '_%s'%i # SPE1_i
         

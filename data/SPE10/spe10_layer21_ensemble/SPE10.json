@@ -1,0 +1,105 @@
+{
+    "Name": "IE_SPE10_L21",
+    "Ne": 1,
+    "root": "./data/SPE10/spe10_layer21/ECL_5SPOT.DATA",
+    "n_parallel": 1,
+    "parameters":
+         [],
+   "controls":
+      [
+         {
+            "Name": "$I1BHP",
+            "Default": 414,
+            "lb": 282,
+            "ub": 414,
+            "type": "float"
+         },
+         {
+            "Name": "$P1BHP",
+            "Default": 69,
+            "lb": 69,
+            "ub": 241,
+            "type": "float"
+         },
+         {
+            "Name": "$P2BHP",
+            "Default": 69,
+            "lb": 69,
+            "ub": 241,
+            "type": "float"
+         },
+         {
+            "Name": "$P3BHP",
+            "Default": 69,
+            "lb": 69,
+            "ub": 241,
+            "type": "float"
+         },
+         {
+            "Name": "$P4BHP",
+            "Default": 69,
+            "lb": 69,
+            "ub": 241,
+            "type": "float"
+         }
+      ],
+   "historymatching":
+            {
+               "updatepath":"./data/SPE10/spe10model2/update",
+               "method": "PLSR",
+               "model3d": 
+                  [],
+               "timestep": "./data/SPE10/spe10model2/historic_data/summary/YEARS.npy",
+               "objectives":
+                  {}
+            },
+            "optimization": 
+            {
+                "parameters": 
+                {
+                    "maxIter": 100,
+                    "optimizer": "DFTR",
+                    "costFunction": "NPV",
+                    "constraints": {
+                        "FWPT": {
+                            "is_active": false,
+                            "value": 1000000,
+                            "type": "inequality",
+                            "robustness": {
+                                "type": "percentile",
+                                "value": 95
+                            }
+                        },
+                        "FGPT": {
+                            "is_active": false,
+                            "value": 250E+6,
+                            "type": "inequality",
+                            "robustness": {
+                                "type": "percentile",
+                                "value": 95
+                            }
+                        }
+                    },
+                    "constants": {
+                            "gamma_0": 0.6,
+                            "gamma_1": 0.8,
+                            "gamma_2": 2.0,
+                            "eta_1": 1E-12,
+                            "eta_2": 1E-11,
+                            "mu": 0.01,
+                            "gamma_vartheta": 0.1,
+                            "kappa_vartheta": 0.0001,
+                            "kappa_radius": 0.8,
+                            "kappa_mu": 10,
+                            "kappa_tmd": 0.01,
+                            "init_radius": 10.0,
+                            "stopping_radius": 1E-5,
+                            "L_threshold": 1.0
+                        },
+                    "options": {
+                        "budget" : 500,
+                        "max_points" : 15
+                    }
+                }
+            }
+}

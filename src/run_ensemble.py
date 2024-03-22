@@ -2,10 +2,15 @@ from tqdm import tqdm
 import sys
 import os
 import subprocess
-import utils.utilities as u
+try:
+    from .utils import utilities as u
+except ImportError:
+    import utils.utilities as u 
 from datetime import datetime
 from pathlib import Path
 
+import time
+from wrapt_timeout_decorator import *
 
 STORAGE_DIR = './simulations/storage/'
 STUDIES_DIR = './simulations/studies/'
@@ -40,6 +45,7 @@ def run_case(base_datafile_path, real_datafile_path, controls, simulator_path, r
     command = simulate_case(simulator_path, real_name, real_datafile_path)
     return command
 
+@timeout(360) #10 min timeout # 1 hour timeout
 def run_cases(simulator_path, study, simfolder_path, controls, n_parallel):
     
     _, tail = os.path.split(study['creation']['root']) # dir_path = /path/to/data
@@ -62,7 +68,7 @@ def run_cases(simulator_path, study, simfolder_path, controls, n_parallel):
         command = run_case(base_datafile_path, real_datafile_path, controls, simulator_path, real_name)
         commands.append(command)
         realizations[real_name] = real_datafile_path
-        
+    
     is_success = u.run_bash_commands_in_parallel(commands, max_tries=1, n_parallel=n_parallel)
     
     return realizations, is_success

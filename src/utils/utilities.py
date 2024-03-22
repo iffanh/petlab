@@ -14,6 +14,7 @@ from tqdm import tqdm
 
 import csv
 
+
 def run_bash_commands_in_parallel(commands, max_tries, n_parallel):
     """
     Run a list of bash commands in parallel with maximum number of processes
