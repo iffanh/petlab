@@ -584,6 +584,92 @@ def run_optimization(study_path, simulator_path):
         
         return OUT
     
+    elif optimizer == 'COBYQA':
+        # define cost function
+        cf = lambda x, study_path=study_path, simulator_path=simulator_path: cost_function(x, study_path, simulator_path)[0]
+        _eqs = [lambda x, study_path=study_path, simulator_path=simulator_path, i=i: cost_function(x, study_path, simulator_path)[1][i] for i in range(n_eq)]
+        _ineqs = [lambda x, study_path=study_path, simulator_path=simulator_path, i=i: cost_function(x, study_path, simulator_path)[2][i] for i in range(n_ineq)]
+        
+        from scipy.optimize import LinearConstraint, NonlinearConstraint, SR1
+        from cobyqa import minimize
+        eqs = [NonlinearConstraint(eq, 0, 0) for eq in _eqs]
+        ineqs = [NonlinearConstraint(eq, 0, np.inf) for eq in _ineqs]
+        
+        cons = []
+        
+        for eq in _eqs:
+            cons.append({
+                'type': 'eq',
+                'func': eq
+            })
+            
+        for ineq in _ineqs:
+            cons.append({
+                'type': 'ineq',
+                'func': ineq
+            })
+        
+        
+        # define bounds
+        bounds = []
+        for c in controls:
+            try:
+                lb = c['lb']
+            except:
+                lb = -np.inf
+                
+            try:
+                ub = c['ub']
+            except:
+                ub = np.inf
+                
+            bounds.append((lb, ub))
+            
+        def callback(x):
+    
+            result = cost_function(x, study_path, simulator_path)
+            
+            global OUT_COBYQA
+            OUT_COBYQA['f'].append(result[0])
+            OUT_COBYQA['x'].append(x.tolist())
+            OUT_COBYQA['v'].append(result[1])
+            OUT_COBYQA['v'].append(result[2])
+            
+            return
+            
+        global OUT_COBYQA
+        OUT_COBYQA = {}
+        OUT_COBYQA['f'] = []
+        OUT_COBYQA['x'] = []
+        OUT_COBYQA['v'] = []
+        
+        opt_constants = config['optimization']['parameters']['constants']
+        
+        result = minimize(fun = cf, 
+                            x0 = x0,
+                            constraints = eqs + ineqs,
+                            bounds=bounds,
+                            options={'maxiter': config['optimization']['parameters']['maxIter'],
+                                     'maxfev': config['optimization']['parameters']['options']['budget'],
+                                     'low_ratio': opt_constants['eta_1'],
+                                     'high_ratio': opt_constants['eta_2'],
+                                     'very_low_ratio': 1E-16,
+                                     'decrease_radius_factor': opt_constants['gamma_0'],
+                                     'increase_radius_factor': opt_constants['gamma_1'],
+                                     'store_history': True,
+                                     'radius_final': opt_constants['stopping_radius']},
+                            callback=callback)
+    
+        
+        OUT_COBYQA['nfev'] = result.nfev
+        OUT_COBYQA['status'] = result.status
+        OUT_COBYQA['message'] = result.message
+        OUT_COBYQA['maxcv'] = result.maxcv
+        OUT_COBYQA['fun_history'] = list(result.fun_history)
+        OUT_COBYQA['maxcv_history'] = list(result.maxcv_history)
+        
+        return OUT_COBYQA
+    
     elif optimizer == "NOMAD":
         
         import PyNomad #must install PyNomadBBO package
