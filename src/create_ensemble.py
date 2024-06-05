@@ -21,7 +21,7 @@ def mutate_case(root_datafile_path, real_datafile_path, parameters, case_number)
         filedata = file.read()
 
     # parameters
-    pbar = tqdm(parameters, total=len(parameters), leave=False, desc="Populating properties: ", disable=False)
+    pbar = tqdm(parameters, total=len(parameters), leave=False, desc="Populating properties: ", disable=True)
     for param in pbar:
         
         Name = param["Name"]
