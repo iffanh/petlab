@@ -542,7 +542,8 @@ def run_optimization(study_path, simulator_path):
         print("run the latest ...")
         # cost_function(tr.iterates[-1]["y_curr"], study_path, simulator_path)
 
-        xsol = tr.iterates[-1]["y_curr"]
+        # xsol = tr.iterates[-1]["y_curr"]
+        xsol = tr.iterates[-1]['best_point']["y"]
         study = u.read_json(study_path)
         config = u.read_json(study['creation']['json'])
         controls = config['controls']
@@ -702,15 +703,18 @@ def run_optimization(study_path, simulator_path):
                             x0 = x0,
                             constraints = eqs + ineqs,
                             bounds=bounds,
-                            options={'maxiter': config['optimization']['parameters']['maxIter'],
-                                     'maxfev': config['optimization']['parameters']['options']['budget'],
+                            options={'maxfev': config['optimization']['parameters']['options']['budget'],
                                      'low_ratio': opt_constants['eta_1'],
                                      'high_ratio': opt_constants['eta_2'],
                                      'very_low_ratio': 1E-16,
                                      'decrease_radius_factor': opt_constants['gamma_0'],
-                                     'increase_radius_factor': opt_constants['gamma_1'],
+                                     'increase_radius_factor': opt_constants['gamma_2'],
                                      'store_history': True,
-                                     'radius_final': opt_constants['stopping_radius']},
+                                     'radius_init': opt_constants['init_radius'],
+                                     'radius_final': opt_constants['stopping_radius'],
+                                     'nb_points': 2*len(x0) + 1, 
+                                     'scale': True,
+                                     'disp': True},
                             callback=callback)
     
         
@@ -873,18 +877,21 @@ def run_optimization(study_path, simulator_path):
     
 
 def save_iterations(tr):
-    
+                        
     # save iterations
     out = {}
     f = []
     for t in tr.iterates:
-        f.append(t["fY"][0])
+        # f.append(t["fY"][0])
+        f.append(t["best_point"]["f"])
     out["f"] = f
     
     x = []
     for t in tr.iterates:
-        xs = t["Y"][:,0].tolist()
-        x.append(tr.denorm(np.array(xs)).tolist())
+        # xs = t["Y"][:,0].tolist()
+        # x.append(tr.denorm(np.array(xs)).tolist())
+        xs = t["best_point"]["y"].tolist()
+        x.append(xs)
     out["x"] = x
     
     neval = []
@@ -897,14 +904,15 @@ def save_iterations(tr):
         total_neval.append(t["total_number_of_function_calls"])
     out["total_neval"] = total_neval
 
-    v = []
-    for t in tr.iterates:
-        v.append(t['all_violations'])
-    out["all_violations"] = v
+    # v = []
+    # for t in tr.iterates:
+    #     v.append(t['all_violations'])
+    # out["all_violations"] = v
     
     v = []
     for t in tr.iterates:
-        v.append(list(t['v']))
+        # v.append(list(t['v']))
+        v.append(t["best_point"]["v"])
     out["violations"] = v
     
     return out
