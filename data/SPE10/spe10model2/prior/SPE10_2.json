@@ -1,0 +1,50 @@
+{
+    "Name": "IE_SPE10_2",
+    "Ne": 32,
+    "root": "./data/SPE10/spe10model2/SPE10.DATA",
+    "n_parallel": 8,
+    "parameters":
+        [
+         {
+             "Name": "$PERMX",
+             "Type": "RandomField",
+             "Distribution": {
+                "name": "LogNormal",
+                "size": [60, 60, 1],
+                "scale": [6, 3, 1],
+                "angles": 45,
+                "parameters": {
+                        "mean": 300, 
+                        "std": 50,
+                        "min": 20, 
+                        "max": 600,
+                        "type": "float"}
+            }
+         }],
+   "controls":
+         [],
+   "historymatching":
+            {
+               "updatepath":"./data/SPE10/spe10model2/update",
+               "method": "PLSR",
+               "model3d": 
+                  [
+                     "PERMX"
+                  ],
+               "timestep": "./data/SPE10/spe10model2/historic_data/summary/YEARS.npy",
+               "objectives":
+                  {
+                     "WWIR:I1": "./data/SPE10/spe10model2/historic_data/summary/WWIR:I1.npy",
+                     "WWIR:I2": "./data/SPE10/spe10model2/historic_data/summary/WWIR:I2.npy",
+                     "WWIR:I3": "./data/SPE10/spe10model2/historic_data/summary/WWIR:I3.npy",
+                     "WWCT:P1": "./data/SPE10/spe10model2/historic_data/summary/WWCT:P1.npy",
+                     "WWCT:P2": "./data/SPE10/spe10model2/historic_data/summary/WWCT:P2.npy",
+                     "WWCT:P3": "./data/SPE10/spe10model2/historic_data/summary/WWCT:P3.npy",
+                     "WWCT:P4": "./data/SPE10/spe10model2/historic_data/summary/WWCT:P4.npy",
+                     "WOPR:P1": "./data/SPE10/spe10model2/historic_data/summary/WOPR:P1.npy",
+                     "WOPR:P2": "./data/SPE10/spe10model2/historic_data/summary/WOPR:P2.npy",
+                     "WOPR:P3": "./data/SPE10/spe10model2/historic_data/summary/WOPR:P3.npy",
+                     "WOPR:P4": "./data/SPE10/spe10model2/historic_data/summary/WOPR:P4.npy"
+                  }
+            }
+}

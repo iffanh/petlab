@@ -160,7 +160,6 @@ def run_history_matching(data:dict, params:dict, dim_red_method:Union[PLSRegress
         ultimate_of = 0
         for i, model in enumerate(models):            
             ultimate_of += (model(*x)**2)
-            
         return np.sqrt(ultimate_of)
         
     def dummy(x, ii):
@@ -176,9 +175,6 @@ def run_history_matching(data:dict, params:dict, dim_red_method:Union[PLSRegress
                                         np.min(static3d_hat, axis=0), 
                                         np.max(static3d_hat, axis=0)))
     
-    print(fun(x0))
-    # asdf
-    print("Minimizing ...")
     res = scipy.optimize.minimize(fun, 
                                 x0, 
                                 args=(), 
@@ -191,7 +187,6 @@ def run_history_matching(data:dict, params:dict, dim_red_method:Union[PLSRegress
                                 tol=None, 
                                 callback=None, 
                                 options=None)
-    print("Done!")
     
     scoresX_post[:,:n_component] = res.x
 
@@ -275,8 +270,8 @@ def run_pcesmda(data, params):
     _ofs = _ofs.T
     
     
-    def pce_model(m_train):
-        plsr = PLSRegression(params['ncomponent'])
+    def pce_model(m_train, n_component, polynomial_order):
+        plsr = PLSRegression(n_component)
         scoresX, scoresY = plsr.fit_transform(m_train, sim_array)
         
         nodes = scoresX[:,:n_component].T
@@ -289,10 +284,13 @@ def run_pcesmda(data, params):
         
         expansion = chaospy.generate_expansion(polynomial_order, joint, rule="three_terms_recurrence")
         models = chaospy.fit_quadrature(expansion, nodes, weights, scoresY)
+                
         
         return models, plsr
     
-    models, plsr = pce_model(static3d)
+    
+    
+    models, plsr = pce_model(static3d, params['ncomponent'], polynomial_order)
     _, hist_scoresY = plsr.transform(static3d, np.array([hist_vector]))
     
     def g_func(m):
@@ -447,5 +445,4 @@ if __name__ == "__main__":
     
     Ex. python3 src/hm_ensemble.py simulations/studies/IE_PoroPerm2_RF.json 
     """
-    print("HISTORY MATCHING")
     main(sys.argv[1:])

@@ -40,4 +40,4 @@ tzdata
 urllib3
 zipp
 
-py-trsqp @ git+https://github.com/iffanh/petlab@master
+py-trsqp @ git+https://github.com/iffanh/py-trsqp@main
