@@ -36,7 +36,10 @@ def change_control(base_datafile_path, real_datafile_path, controls):
         file.write(filedata)
 
 def simulate_case(simulator_path, real_name, real_path):
-    command = [simulator_path, '--enable-terminal-output=false', real_path]
+    if "flow" in simulator_path:
+        command = [simulator_path, '--enable-terminal-output=false', real_path]
+    elif "ecl" in simulator_path:
+        command = [simulator_path, real_path[:-5]] #does not need the .DATA format
     
     return command
     

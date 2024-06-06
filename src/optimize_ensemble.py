@@ -146,6 +146,50 @@ def create_extension_folders(study):
         
     return extension_dict
 
+def calculate_cost_function(study):
+    config = u.read_json(study['creation']['json'])
+    cf_type = config['optimization']['parameters']['costFunction'] 
+    if cf_type == "NPV":
+        return calculate_npv
+    elif cf_type == "NetCashFlow-Last":
+        return calculate_net_cash_flow
+    
+def calculate_net_cash_flow(study, unit, summary_folder):
+    
+    # From Jinjie
+    FCMIT = 732000000 # m3
+    FCMIT = FCMIT * 1.98 / 1000 # ton
+    FWIT = 3600000 # m3
+    coil = 85 #$/bbl
+    coil = coil * 6.2898 #$/m3
+    cco2tax = 86*44/1000 #$/ton
+    cwp = 8 #$/bbl
+    cwp = cwp * 6.2898 #$/m3
+    cwi = 8 #$/bbl
+    cwi = cwi * 6.2898 #$/m3
+    cco2i = 50 #$/ton
+    
+    
+    cashflow_arr = []
+    realizations = study['simulation']['realizations']
+    for i, real in enumerate(realizations):
+        FWPT = np.load(summary_folder[real]["FWPT"])[-1]
+        FOPT = np.load(summary_folder[real]["FOPT"])[-1]
+        FCO2PT = np.load(summary_folder[real]["FCMPT_1"])[-1]
+
+        CashFlow = coil*FOPT + cco2tax*FCO2PT- cwp*FWPT - cwi*FWIT - cco2i*FCMIT
+
+        cashflow_arr.append(CashFlow)
+        
+    # cashflow = np.nanmean(cashflow_arr)
+    cashflow = np.array(cashflow_arr)
+    filename = os.path.join(study['extension']['storage'], 'results', 'cashflow.npy')
+    np.save(filename, cashflow)
+
+    study['extension']['optimization']['NPV'] = filename
+    
+    return study
+    
 def calculate_npv(study, unit, summary_folder):
     
     """
@@ -274,7 +318,8 @@ def get_unit(study):
 def formulate_problem(study):
     
     unit = get_unit(study)
-    study = calculate_npv(study, unit, summary_folder=study['extraction']['summary'])
+    study = calculate_cost_function(study)(study, unit, summary_folder=study['extraction']['summary'])
+    # study = calculate_npv(study, unit, summary_folder=study['extraction']['summary'])
     
     return study
 
@@ -326,13 +371,20 @@ def cost_function(x, study_path, simulator_path):
     if cf_type == "NPV":
         # get npv
         unit = get_unit(study)
-        study = calculate_npv(study, unit, summary)
+        study = calculate_cost_function(study)(study, unit, summary)
+        # study = calculate_npv(study, unit, summary)
         npv_path = study['extension']['optimization']['NPV']
         npv_arr = np.load(npv_path)[:, is_success]
         # npv_T = np.cumsum(npv_arr, axis=1)[:,-1]
         npv_T = np.cumsum (npv_arr, axis=0)
-        npv_cf = np.mean(npv_T, axis=1)[-1]
+        cf = np.mean(npv_T, axis=1)[-1]
         
+    elif cf_type == "NetCashFlow-Last":
+        
+        cashflow_path = study['extension']['optimization']['NPV']
+        cashflow = np.load(cashflow_path)
+        cf = np.mean(cashflow)
+    
     else:
         raise NotImplementedError(f"Cost function of type {cf_type} has not been implemented yet.")
         
@@ -415,7 +467,7 @@ def cost_function(x, study_path, simulator_path):
         elif d['type'] == "equality":
             eqs.append(val)
     
-    results = (-npv_cf, eqs, ineqs)
+    results = (-cf, eqs, ineqs)
     return results
 
 def get_n_constraints(constraints:dict):
@@ -500,11 +552,12 @@ def run_optimization(study_path, simulator_path):
         
         simfolder_path = study['extension']['storage']
         realizations, is_success = run_ensemble.run_cases(simulator_path, study, simfolder_path, controls, n_parallel=config['n_parallel'])
-        print(is_success)
+        # print(is_success)
         
         storage = study['extension']['storage']
         summary = extract_ensemble.get_summary(realizations, storage)
-        study = calculate_npv(study, get_unit(study), summary)
+        study = calculate_cost_function(study)(study, get_unit(study), summary)
+        # study = calculate_npv(study, get_unit(study), summary)
 
         out = save_iterations(tr)
         
@@ -731,7 +784,8 @@ def run_optimization(study_path, simulator_path):
         
         storage = study['extension']['storage']
         summary = extract_ensemble.get_summary(realizations, storage)
-        study = calculate_npv(study, get_unit(study), summary)
+        study = calculate_cost_function(study)(study, get_unit(study), summary)
+        # study = calculate_npv(study, get_unit(study), summary)
 
         OUT = {}
         OUT['x_best'] = result['x_best']
@@ -796,7 +850,8 @@ def run_optimization(study_path, simulator_path):
         
         storage = study['extension']['storage']
         summary = extract_ensemble.get_summary(realizations, storage)
-        study = calculate_npv(study, get_unit(study), summary)
+        study = calculate_cost_function(study)(study, get_unit(study), summary)
+        # study = calculate_npv(study, get_unit(study), summary)
 
         OUT = {}
 
