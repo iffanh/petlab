@@ -177,7 +177,7 @@ def calculate_net_cash_flow(study, unit, summary_folder):
         FOPT = np.load(summary_folder[real]["FOPT"])[-1]
         FCO2PT = np.load(summary_folder[real]["FCMPT_1"])[-1]
 
-        CashFlow = coil*FOPT + cco2tax*FCO2PT- cwp*FWPT - cwi*FWIT - cco2i*FCMIT
+        CashFlow = coil*FOPT + cco2tax*FCO2PT - cwp*FWPT - cwi*FWIT - cco2i*FCMIT
 
         cashflow_arr.append(CashFlow)
         
@@ -361,7 +361,9 @@ def cost_function(x, study_path, simulator_path):
     
     realizations = study['extension']['realizations'] 
     storage = study['extension']['storage']
-    summary = extract_ensemble.get_summary(realizations, storage)
+    # fetch list of summaries to load
+    sum_keys = study["creation"]["config"]["vectors"]["summary"]
+    summary = extract_ensemble.get_summary(realizations, storage, sum_keys)
     study['extension']['optimization']['summary'] = summary
     
     u.save_to_json(study_path, study)
@@ -380,6 +382,9 @@ def cost_function(x, study_path, simulator_path):
         cf = np.mean(npv_T, axis=1)[-1]
         
     elif cf_type == "NetCashFlow-Last":
+        
+        unit = get_unit(study)
+        study = calculate_cost_function(study)(study, unit, summary)
         
         cashflow_path = study['extension']['optimization']['NPV']
         cashflow = np.load(cashflow_path)
@@ -556,7 +561,8 @@ def run_optimization(study_path, simulator_path):
         # print(is_success)
         
         storage = study['extension']['storage']
-        summary = extract_ensemble.get_summary(realizations, storage)
+        sum_keys = study["creation"]["config"]["vectors"]["summary"]
+        summary = extract_ensemble.get_summary(realizations, storage, sum_keys)
         study = calculate_cost_function(study)(study, get_unit(study), summary)
         # study = calculate_npv(study, get_unit(study), summary)
 
@@ -787,7 +793,8 @@ def run_optimization(study_path, simulator_path):
         print(is_success)
         
         storage = study['extension']['storage']
-        summary = extract_ensemble.get_summary(realizations, storage)
+        sum_keys = study["creation"]["config"]["vectors"]["summary"]
+        summary = extract_ensemble.get_summary(realizations, storage, sum_keys)
         study = calculate_cost_function(study)(study, get_unit(study), summary)
         # study = calculate_npv(study, get_unit(study), summary)
 
@@ -853,7 +860,8 @@ def run_optimization(study_path, simulator_path):
         print(is_success)
         
         storage = study['extension']['storage']
-        summary = extract_ensemble.get_summary(realizations, storage)
+        sum_keys = study["creation"]["config"]["vectors"]["summary"]
+        summary = extract_ensemble.get_summary(realizations, storage, sum_keys)
         study = calculate_cost_function(study)(study, get_unit(study), summary)
         # study = calculate_npv(study, get_unit(study), summary)
 
