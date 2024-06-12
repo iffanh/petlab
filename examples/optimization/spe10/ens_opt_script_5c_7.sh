@@ -1,4 +1,4 @@
-METHOD="NOMAD"
+METHOD="DFTR"
 
 CONFIG_FILE="data/SPE10/spe10_layer21_ensemble/SPE10_5C_${METHOD}_7.json"
 STUDY_PATH="simulations/studies/IE_SPE10_L21_5C_ENS_${METHOD}_7.json"
