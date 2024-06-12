@@ -9,6 +9,8 @@ except ImportError:
 from datetime import datetime
 from pathlib import Path
 
+import ecl.eclfile 
+
 import time
 from wrapt_timeout_decorator import *
 
@@ -73,6 +75,22 @@ def run_cases(simulator_path, study, simfolder_path, controls, n_parallel):
         realizations[real_name] = real_datafile_path
     
     is_success = u.run_bash_commands_in_parallel(commands, max_tries=1, n_parallel=n_parallel)
+    
+    # post process to know whether the simulation ends successfully or not
+    # When a simulation fails, flow reports error, while E300 might not
+    # So we check the timesteps generated instead from .UNRST
+    for i, real_name in tqdm(enumerate(base_realizations.keys()), total=l, desc="Preparing: ", leave=False):
+        real_name = root_name + '_%s'%(i+1) # SPE1_i
+        
+        real_path = os.path.join(simfolder_path, real_name) # /path/to/data/SPE1_i
+        real_unrst_path = os.path.join(real_path, real_name + '.UNRST') # /path/to/data/SPE1_i/SPE1_i.DATA
+        
+        file = ecl.eclfile.EclFile(real_unrst_path)
+        
+        if len(file.report_steps) == 1:
+            is_success[i] = False
+            
+    print(is_success)
     
     return realizations, is_success
         

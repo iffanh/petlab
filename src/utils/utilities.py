@@ -48,7 +48,7 @@ def run_bash_commands_in_parallel(commands, max_tries, n_parallel):
             if ret is None:
                 running.append((process, command, tries, index))
             # retry errored jobs
-            elif ret != 0:
+            elif ret != 0: ## DOESN'T WORK FOR ECLIPSE300
                 if tries < max_tries:
                     waiting.append((command, tries  + 1))
                 else:
@@ -58,9 +58,10 @@ def run_bash_commands_in_parallel(commands, max_tries, n_parallel):
                 # print(f'Command {command} finished successfully')
                 is_success[index] = True
                 pbar.update(1)
-                
+
         # sleep a bit to reduce CPU usage
         time.sleep(0.5)
+        
     pbar.set_description(f'All simulation done')
     pbar.close()
     return is_success
