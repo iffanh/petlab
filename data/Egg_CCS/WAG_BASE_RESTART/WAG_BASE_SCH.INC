@@ -1,0 +1,585 @@
+-- Generated [
+-- Format      : ECLIPSE keywords (ASCII)
+-- Exported by : Petrel 2017.4 Schlumberger
+-- User name   : Aqnan Matthew
+-- Date        : Tuesday, April 13 2021 22:33:26
+-- Project     : EggModel.pet
+-- Generated ]
+
+TUNING
+  0.1 1* 0.05 0.1 6* /
+  11* /
+  24 1* 200 7* /
+
+SKIPREST                               -- Generated : Petrel
+
+RPTONLY
+
+WELSPECS                               -- Generated : Petrel
+--'INJECT1' is the simulation well name used to describe flow from 'INJECT1'
+--'INJECT6' is the simulation well name used to describe flow from 'INJECT6'
+--'INJECT8' is the simulation well name used to describe flow from 'INJECT8'
+--'PROD1' is the simulation well name used to describe flow from 'PROD1'
+--'PROD3' is the simulation well name used to describe flow from 'PROD3'
+--'PROD4' is the simulation well name used to describe flow from 'PROD4'
+--
+  INJECT1 'GROUP 1' $INJECT1X $INJECT1Y 1* WATER /
+--  INJECT6 'GROUP 1' 8 9 1* WATER /
+--  INJECT8 'GROUP 1' 57 6 1* WATER /
+  PROD1 'GROUP 1' 13 41 1* OIL /
+--  PROD3 'GROUP 1' 23 16 1* OIL /
+--  PROD4 'GROUP 1' 43 18 1* OIL /
+  /
+
+WLIST                                  -- Generated : Petrel
+  '*WL_1' NEW
+  INJECT1/
+  '*WL_2' NEW
+  PROD1/
+  '*WELLS F' NEW
+  INJECT1 PROD1 /
+  /
+
+COMPDAT                                -- Generated : Petrel
+  INJECT1 $INJECT1X $INJECT1Y 1 1 OPEN 1* 111.907 0.2 8150 0 1* Z 4.94975 /
+  INJECT1 $INJECT1X $INJECT1Y 2 2 OPEN 1* 70.4051 0.2 5127.5 0 1* Z 4.94975 /
+  INJECT1 $INJECT1X $INJECT1Y 3 3 OPEN 1* 93.7991 0.2 6831.25 0 1* Z 4.94975 /
+  INJECT1 $INJECT1X $INJECT1Y 4 4 OPEN 1* 66.303 0.2 4828.75 0 1* Z 4.94975 /
+  INJECT1 $INJECT1X $INJECT1Y 5 5 OPEN 1* 77.2362 0.2 5625 0 1* Z 4.94975 /
+  INJECT1 $INJECT1X $INJECT1Y 6 6 OPEN 1* 87.9291 0.2 6403.75 0 1* Z 4.94975 /
+  INJECT1 $INJECT1X $INJECT1Y 7 7 OPEN 1* 86.6934 0.2 6313.75 0 1* Z 4.94975 /
+
+  PROD1 13 41 1 1 OPEN 1* 122.462 0.2 8918.75 0 1* Z 4.94975 /
+  PROD1 13 41 2 2 OPEN 1* 74.4214 0.2 5420 0 1* Z 4.94975 /
+  PROD1 13 41 3 3 OPEN 1* 92.8036 0.2 6758.75 0 1* Z 4.94975 /
+  PROD1 13 41 4 4 OPEN 1* 119.579 0.2 8708.75 0 1* Z 4.94975 /
+  PROD1 13 41 5 5 OPEN 1* 109.058 0.2 7942.5 0 1* Z 4.94975 /
+  PROD1 13 41 6 6 OPEN 1* 120.454 0.2 8772.5 0 1* Z 4.94975 /
+  PROD1 13 41 7 7 OPEN 1* 96.9572 0.2 7061.25 0 1* Z 4.94975 /
+  /
+
+GRUPTREE                               -- Generated : Petrel
+  'GROUP 1' FIELD /
+  /
+
+WCONPROD                               -- Generated : Petrel
+  PROD1 1* GRUP 2000 1* 1* 1* 1* 250 /
+  /
+
+WCONINJE                               -- Generated : Petrel
+  INJECT1 WATER 1* RATE 2000 1* 350 /
+  /
+
+WELTARG                                -- Generated : Petrel
+  INJECT1 GRAT 400000 /
+  INJECT1 WRAT 2000 /
+  /
+
+SEPCOND                                -- Generated : Petrel
+--'STCOND' is the simulation separator name used to describe the separator  'STCOND'
+--
+  STCOND 1* 1 15.567 1.0133 /
+  /
+
+WSEPCOND                               -- Generated : Petrel
+  INJECT1 STCOND /
+  /
+
+WELLSTRE                               -- Generated : Petrel
+  WSTR0
+                 1 /
+  /
+
+WINJGAS                                -- Generated : Petrel
+  INJECT1 STREAM WSTR0 /
+  /
+
+WELLWAG                                -- Generated : Petrel
+  INJECT1 T G 90 1* 90 1* 1* RATE RATE /
+ -- INJECT6 T G 90 1* 90 1* 1* RATE RATE /
+ -- INJECT8 T G 90 1* 90 1* 1* RATE RATE /
+  /
+
+DATES                                  -- Generated : Petrel
+  21 JAN 2023 /
+  /
+
+DATES                                  -- Generated : Petrel
+  20 FEB 2023 /
+  /
+
+DATES                                  -- Generated : Petrel
+  22 MAR 2023 /
+  /
+
+DATES                                  -- Generated : Petrel
+  21 APR 2023 /
+  /
+
+DATES                                  -- Generated : Petrel
+  21 MAY 2023 /
+  /
+
+DATES                                  -- Generated : Petrel
+  20 JUN 2023 /
+  /
+
+DATES                                  -- Generated : Petrel
+  20 JUL 2023 /
+  /
+
+DATES                                  -- Generated : Petrel
+  19 AUG 2023 /
+  /
+
+DATES                                  -- Generated : Petrel
+  18 SEP 2023 /
+  /
+
+DATES                                  -- Generated : Petrel
+  18 OCT 2023 /
+  /
+
+DATES                                  -- Generated : Petrel
+  17 NOV 2023 /
+  /
+
+DATES                                  -- Generated : Petrel
+  17 DEC 2023 /
+  /
+
+DATES                                  -- Generated : Petrel
+  16 JAN 2024 /
+  /
+
+DATES                                  -- Generated : Petrel
+  15 FEB 2024 /
+  /
+
+DATES                                  -- Generated : Petrel
+  16 MAR 2024 /
+  /
+
+DATES                                  -- Generated : Petrel
+  15 APR 2024 /
+  /
+
+DATES                                  -- Generated : Petrel
+  15 MAY 2024 /
+  /
+
+DATES                                  -- Generated : Petrel
+  14 JUN 2024 /
+  /
+
+DATES                                  -- Generated : Petrel
+  14 JUL 2024 /
+  /
+
+DATES                                  -- Generated : Petrel
+  13 AUG 2024 /
+  /
+
+DATES                                  -- Generated : Petrel
+  12 SEP 2024 /
+  /
+
+DATES                                  -- Generated : Petrel
+  12 OCT 2024 /
+  /
+
+DATES                                  -- Generated : Petrel
+  11 NOV 2024 /
+  /
+
+DATES                                  -- Generated : Petrel
+  11 DEC 2024 /
+  /
+
+DATES                                  -- Generated : Petrel
+  10 JAN 2025 /
+  /
+
+DATES                                  -- Generated : Petrel
+  9 FEB 2025 /
+  /
+
+DATES                                  -- Generated : Petrel
+  11 MAR 2025 /
+  /
+
+DATES                                  -- Generated : Petrel
+  10 APR 2025 /
+  /
+
+DATES                                  -- Generated : Petrel
+  10 MAY 2025 /
+  /
+
+DATES                                  -- Generated : Petrel
+  9 JUN 2025 /
+  /
+
+DATES                                  -- Generated : Petrel
+  9 JUL 2025 /
+  /
+
+DATES                                  -- Generated : Petrel
+  8 AUG 2025 /
+  /
+
+DATES                                  -- Generated : Petrel
+  7 SEP 2025 /
+  /
+
+DATES                                  -- Generated : Petrel
+  7 OCT 2025 /
+  /
+
+DATES                                  -- Generated : Petrel
+  6 NOV 2025 /
+  /
+
+DATES                                  -- Generated : Petrel
+  6 DEC 2025 /
+  /
+
+DATES                                  -- Generated : Petrel
+  5 JAN 2026 /
+  /
+
+DATES                                  -- Generated : Petrel
+  4 FEB 2026 /
+  /
+
+DATES                                  -- Generated : Petrel
+  6 MAR 2026 /
+  /
+
+DATES                                  -- Generated : Petrel
+  5 APR 2026 /
+  /
+
+DATES                                  -- Generated : Petrel
+  5 MAY 2026 /
+  /
+
+DATES                                  -- Generated : Petrel
+  4 JUN 2026 /
+  /
+
+DATES                                  -- Generated : Petrel
+  4 JUL 2026 /
+  /
+
+DATES                                  -- Generated : Petrel
+  3 AUG 2026 /
+  /
+
+DATES                                  -- Generated : Petrel
+  2 SEP 2026 /
+  /
+
+DATES                                  -- Generated : Petrel
+  2 OCT 2026 /
+  /
+
+DATES                                  -- Generated : Petrel
+  1 NOV 2026 /
+  /
+
+DATES                                  -- Generated : Petrel
+  1 DEC 2026 /
+  /
+
+DATES                                  -- Generated : Petrel
+  31 DEC 2026 /
+  /
+
+DATES                                  -- Generated : Petrel
+  30 JAN 2027 /
+  /
+
+DATES                                  -- Generated : Petrel
+  1 MAR 2027 /
+  /
+
+DATES                                  -- Generated : Petrel
+  31 MAR 2027 /
+  /
+
+DATES                                  -- Generated : Petrel
+  30 APR 2027 /
+  /
+
+DATES                                  -- Generated : Petrel
+  30 MAY 2027 /
+  /
+
+DATES                                  -- Generated : Petrel
+  29 JUN 2027 /
+  /
+
+DATES                                  -- Generated : Petrel
+  29 JUL 2027 /
+  /
+
+DATES                                  -- Generated : Petrel
+  28 AUG 2027 /
+  /
+
+DATES                                  -- Generated : Petrel
+  27 SEP 2027 /
+  /
+
+DATES                                  -- Generated : Petrel
+  27 OCT 2027 /
+  /
+
+DATES                                  -- Generated : Petrel
+  26 NOV 2027 /
+  /
+
+DATES                                  -- Generated : Petrel
+  26 DEC 2027 /
+  /
+
+DATES                                  -- Generated : Petrel
+  25 JAN 2028 /
+  /
+
+DATES                                  -- Generated : Petrel
+  24 FEB 2028 /
+  /
+
+DATES                                  -- Generated : Petrel
+  25 MAR 2028 /
+  /
+
+DATES                                  -- Generated : Petrel
+  24 APR 2028 /
+  /
+
+DATES                                  -- Generated : Petrel
+  24 MAY 2028 /
+  /
+
+DATES                                  -- Generated : Petrel
+  23 JUN 2028 /
+  /
+
+DATES                                  -- Generated : Petrel
+  23 JUL 2028 /
+  /
+
+DATES                                  -- Generated : Petrel
+  22 AUG 2028 /
+  /
+
+DATES                                  -- Generated : Petrel
+  21 SEP 2028 /
+  /
+
+DATES                                  -- Generated : Petrel
+  21 OCT 2028 /
+  /
+
+DATES                                  -- Generated : Petrel
+  20 NOV 2028 /
+  /
+
+DATES                                  -- Generated : Petrel
+  20 DEC 2028 /
+  /
+
+DATES                                  -- Generated : Petrel
+  19 JAN 2029 /
+  /
+
+DATES                                  -- Generated : Petrel
+  18 FEB 2029 /
+  /
+
+DATES                                  -- Generated : Petrel
+  20 MAR 2029 /
+  /
+
+DATES                                  -- Generated : Petrel
+  19 APR 2029 /
+  /
+
+DATES                                  -- Generated : Petrel
+  19 MAY 2029 /
+  /
+
+DATES                                  -- Generated : Petrel
+  18 JUN 2029 /
+  /
+
+DATES                                  -- Generated : Petrel
+  18 JUL 2029 /
+  /
+
+DATES                                  -- Generated : Petrel
+  17 AUG 2029 /
+  /
+
+DATES                                  -- Generated : Petrel
+  16 SEP 2029 /
+  /
+
+DATES                                  -- Generated : Petrel
+  16 OCT 2029 /
+  /
+
+DATES                                  -- Generated : Petrel
+  15 NOV 2029 /
+  /
+
+DATES                                  -- Generated : Petrel
+  15 DEC 2029 /
+  /
+
+DATES                                  -- Generated : Petrel
+  14 JAN 2030 /
+  /
+
+DATES                                  -- Generated : Petrel
+  13 FEB 2030 /
+  /
+
+DATES                                  -- Generated : Petrel
+  15 MAR 2030 /
+  /
+
+DATES                                  -- Generated : Petrel
+  14 APR 2030 /
+  /
+
+DATES                                  -- Generated : Petrel
+  14 MAY 2030 /
+  /
+
+DATES                                  -- Generated : Petrel
+  13 JUN 2030 /
+  /
+
+DATES                                  -- Generated : Petrel
+  13 JUL 2030 /
+  /
+
+DATES                                  -- Generated : Petrel
+  12 AUG 2030 /
+  /
+
+DATES                                  -- Generated : Petrel
+  11 SEP 2030 /
+  /
+
+DATES                                  -- Generated : Petrel
+  11 OCT 2030 /
+  /
+
+DATES                                  -- Generated : Petrel
+  10 NOV 2030 /
+  /
+
+DATES                                  -- Generated : Petrel
+  10 DEC 2030 /
+  /
+
+DATES                                  -- Generated : Petrel
+  9 JAN 2031 /
+  /
+
+DATES                                  -- Generated : Petrel
+  8 FEB 2031 /
+  /
+
+DATES                                  -- Generated : Petrel
+  10 MAR 2031 /
+  /
+
+DATES                                  -- Generated : Petrel
+  9 APR 2031 /
+  /
+
+DATES                                  -- Generated : Petrel
+  9 MAY 2031 /
+  /
+
+DATES                                  -- Generated : Petrel
+  8 JUN 2031 /
+  /
+
+DATES                                  -- Generated : Petrel
+  8 JUL 2031 /
+  /
+
+DATES                                  -- Generated : Petrel
+  7 AUG 2031 /
+  /
+
+DATES                                  -- Generated : Petrel
+  6 SEP 2031 /
+  /
+
+DATES                                  -- Generated : Petrel
+  6 OCT 2031 /
+  /
+
+DATES                                  -- Generated : Petrel
+  5 NOV 2031 /
+  /
+
+DATES                                  -- Generated : Petrel
+  5 DEC 2031 /
+  /
+
+DATES                                  -- Generated : Petrel
+  4 JAN 2032 /
+  /
+
+DATES                                  -- Generated : Petrel
+  3 FEB 2032 /
+  /
+
+DATES                                  -- Generated : Petrel
+  4 MAR 2032 /
+  /
+
+DATES                                  -- Generated : Petrel
+  3 APR 2032 /
+  /
+
+DATES                                  -- Generated : Petrel
+  3 MAY 2032 /
+  /
+
+DATES                                  -- Generated : Petrel
+  2 JUN 2032 /
+  /
+
+DATES                                  -- Generated : Petrel
+  2 JUL 2032 /
+  /
+
+DATES                                  -- Generated : Petrel
+  1 AUG 2032 /
+  /
+
+DATES                                  -- Generated : Petrel
+  31 AUG 2032 /
+  /
+
+DATES                                  -- Generated : Petrel
+  30 SEP 2032 /
+  /
+
+DATES                                  -- Generated : Petrel
+  30 OCT 2032 /
+  /
+
+DATES                                  -- Generated : Petrel
+  29 NOV 2032 /
+  /

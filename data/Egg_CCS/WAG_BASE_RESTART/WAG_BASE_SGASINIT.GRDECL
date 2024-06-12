@@ -1,0 +1,17 @@
+-- Generated [
+-- Format      : ECLIPSE keywords (grid properties) (ASCII)
+-- Exported by : Petrel 2022.1 Schlumberger
+-- User name   : jinjiem
+-- Date        : Tuesday, February 07 2023 15:00:44
+-- Project     : 
+-- Grid        : WAG_BASE.EGRID
+-- Unit system : ECLIPSE-Metric
+-- Generated ]
+
+FILEUNIT                               -- Generated : Petrel
+  METRIC /
+
+SGAS                                   -- Generated : Petrel
+-- Property name in Petrel : SGAS, timestep: Dec 22,2022 00:00:00
+  25200*0 /
+
