@@ -1,7 +1,7 @@
 {
     "Name": "HM_SPE10",
     "Ne": 32,
-    "root": "./data/SPE10/spe10model2/SPE10.DATA",
+    "root": "../../data/SPE10/spe10model2/SPE10.DATA",
     "n_parallel": 8,
     "parameters":
         [
@@ -10,7 +10,7 @@
             "Type": "IncrementalValue",
             "Distribution": {
             "parameters": {
-                     "prefix": "./data/SPE10/spe10model2/update/PERMX_",
+                     "prefix": "../../data/SPE10/spe10model2/update/PERMX_",
                      "suffix": ".npy"
                   }
             }
@@ -18,28 +18,39 @@
       ],
    "controls":
          [],
+   "vectors":
+         {
+            "summary": ["WOPR", 
+                        "WWCT",
+                        "WBHP",
+                        "WWIR"],
+            "static3d": [
+                           "PERMX"
+                        ],
+            "dynamic3d": []
+         },
    "historymatching":
             {
-               "updatepath":"./data/SPE10/spe10model2/update",
+               "updatepath":"../../data/SPE10/spe10model2/update",
                "method": "PLSR",
                "model3d": 
                   [
                      "PERMX"
                   ],
-               "timestep": "./data/SPE10/spe10model2/historic_data/summary/YEARS.npy",
+               "timestep": "../../data/SPE10/spe10model2/historic_data/summary/YEARS.npy",
                "objectives":
                   {
-                     "WBHP:I1": "./data/SPE10/spe10model2/historic_data/summary/WBHP:I1.npy",
-                     "WBHP:I2": "./data/SPE10/spe10model2/historic_data/summary/WBHP:I2.npy",
-                     "WBHP:I3": "./data/SPE10/spe10model2/historic_data/summary/WBHP:I3.npy",
-                     "WWCT:P1": "./data/SPE10/spe10model2/historic_data/summary/WWCT:P1.npy",
-                     "WWCT:P2": "./data/SPE10/spe10model2/historic_data/summary/WWCT:P2.npy",
-                     "WWCT:P3": "./data/SPE10/spe10model2/historic_data/summary/WWCT:P3.npy",
-                     "WWCT:P4": "./data/SPE10/spe10model2/historic_data/summary/WWCT:P4.npy",
-                     "WOPR:P1": "./data/SPE10/spe10model2/historic_data/summary/WOPR:P1.npy",
-                     "WOPR:P2": "./data/SPE10/spe10model2/historic_data/summary/WOPR:P2.npy",
-                     "WOPR:P3": "./data/SPE10/spe10model2/historic_data/summary/WOPR:P3.npy",
-                     "WOPR:P4": "./data/SPE10/spe10model2/historic_data/summary/WOPR:P4.npy"
+                     "WBHP:I1": "../../data/SPE10/spe10model2/historic_data/summary/WBHP:I1.npy",
+                     "WBHP:I2": "../../data/SPE10/spe10model2/historic_data/summary/WBHP:I2.npy",
+                     "WBHP:I3": "../../data/SPE10/spe10model2/historic_data/summary/WBHP:I3.npy",
+                     "WWCT:P1": "../../data/SPE10/spe10model2/historic_data/summary/WWCT:P1.npy",
+                     "WWCT:P2": "../../data/SPE10/spe10model2/historic_data/summary/WWCT:P2.npy",
+                     "WWCT:P3": "../../data/SPE10/spe10model2/historic_data/summary/WWCT:P3.npy",
+                     "WWCT:P4": "../../data/SPE10/spe10model2/historic_data/summary/WWCT:P4.npy",
+                     "WOPR:P1": "../../data/SPE10/spe10model2/historic_data/summary/WOPR:P1.npy",
+                     "WOPR:P2": "../../data/SPE10/spe10model2/historic_data/summary/WOPR:P2.npy",
+                     "WOPR:P3": "../../data/SPE10/spe10model2/historic_data/summary/WOPR:P3.npy",
+                     "WOPR:P4": "../../data/SPE10/spe10model2/historic_data/summary/WOPR:P4.npy"
                   }
             }
 }
