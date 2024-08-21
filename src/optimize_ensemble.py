@@ -186,7 +186,7 @@ def calculate_net_cash_flow(study, unit, summary_folder):
     filename = os.path.join(study['extension']['storage'], 'results', 'cashflow.npy')
     np.save(filename, cashflow)
 
-    study['extension']['optimization']['NPV'] = filename
+    study['extension']['optimization']['OF'] = filename
     
     return study
     
@@ -297,7 +297,7 @@ def calculate_npv(study, unit, summary_folder):
     filename = os.path.join(study['extension']['storage'], 'results', 'NPV.npy')
     np.save(filename, npv_arr)
 
-    study['extension']['optimization']['NPV'] = filename
+    study['extension']['optimization']['OF'] = filename
     
     return study
 
@@ -375,7 +375,7 @@ def cost_function(x, study_path, simulator_path):
         unit = get_unit(study)
         study = calculate_cost_function(study)(study, unit, summary)
         # study = calculate_npv(study, unit, summary)
-        npv_path = study['extension']['optimization']['NPV']
+        npv_path = study['extension']['optimization']['OF']
         npv_arr = np.load(npv_path)[:, is_success]
         # npv_T = np.cumsum(npv_arr, axis=1)[:,-1]
         npv_T = np.cumsum (npv_arr, axis=0)
@@ -386,7 +386,7 @@ def cost_function(x, study_path, simulator_path):
         unit = get_unit(study)
         study = calculate_cost_function(study)(study, unit, summary)
         
-        cashflow_path = study['extension']['optimization']['NPV']
+        cashflow_path = study['extension']['optimization']['OF']
         cashflow = np.load(cashflow_path)
         cf = np.mean(cashflow)
     

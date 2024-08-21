@@ -27,7 +27,7 @@ def run_bash_commands_in_parallel(commands, max_tries, n_parallel):
     running = deque()
     is_success = [False]*len(waiting) # list of whether the simulation is a success or not
     
-    pbar = tqdm(total=len(waiting), disable=True)
+    pbar = tqdm(total=len(waiting), disable=False)
     while len(waiting) > 0 or len(running) > 0:
 
         # if less than n_parallel jobs are running and we have waiting jobs,

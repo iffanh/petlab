@@ -50,7 +50,7 @@ def run_case(base_datafile_path, real_datafile_path, controls, simulator_path, r
     command = simulate_case(simulator_path, real_name, real_datafile_path)
     return command
 
-@timeout(360) #10 min timeout # 1 hour timeout
+@timeout(3000) #10 min timeout # 1 hour timeout
 def run_cases(simulator_path, study, simfolder_path, controls, n_parallel):
     
     _, tail = os.path.split(study['creation']['root']) # dir_path = /path/to/data
