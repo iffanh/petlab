@@ -1,0 +1,263 @@
+{
+    "Name": "SPE10_MC",
+    "Ne": 200,
+    "root": "./data/SPE10/spe10_dfo/SPE10.DATA",
+    "n_parallel": 4,
+    "parameters":
+        [
+         {
+             "Name": "$PERMX",
+             "Type": "RandomField",
+             "Distribution": {
+                "name": "LogNormal",
+                "size": [60, 60, 1],
+                "scale": [6, 3, 1],
+                "angles": 45,
+                "parameters": {
+                        "mean": 300, 
+                        "std": 50,
+                        "min": 20, 
+                        "max": 600,
+                        "type": "float"}
+            }
+         }],
+   "controls":
+        [
+            {
+                "Name": "$I1X",
+                "Default": 30,
+                "lb": 1,
+                "ub": 60,
+                "type": "int"
+             },
+             {
+                "Name": "$I1Y",
+                "Default": 30,
+                "lb": 1,
+                "ub": 60,
+                "type": "int"
+             },
+             {
+                "Name": "$P1X",
+                "Default": 6,
+                "lb": 1,
+                "ub": 60,
+                "type": "int"
+             },
+             {
+                "Name": "$P1Y",
+                "Default": 6,
+                "lb": 1,
+                "ub": 60,
+                "type": "int"
+             },
+             {
+                "Name": "$P2X",
+                "Default": 55,
+                "lb": 1,
+                "ub": 60,
+                "type": "int"
+             },
+             {
+                "Name": "$P2Y",
+                "Default": 6,
+                "lb": 1,
+                "ub": 60,
+                "type": "int"
+             },
+             {
+                "Name": "$P3X",
+                "Default": 6,
+                "lb": 1,
+                "ub": 60,
+                "type": "int"
+             },
+             {
+                "Name": "$P3Y",
+                "Default": 55,
+                "lb": 1,
+                "ub": 60,
+                "type": "int"
+             },
+             {
+                "Name": "$P4X",
+                "Default": 55,
+                "lb": 1,
+                "ub": 60,
+                "type": "int"
+             },
+             {
+                "Name": "$P4Y",
+                "Default": 55,
+                "lb": 1,
+                "ub": 60,
+                "type": "int"
+             },
+            {
+            "Name": "$I1BHP1",
+            "Default": 414,
+            "lb": 282,
+            "ub": 414,
+            "type": "float"
+            },
+            {
+            "Name": "$P1BHP1",
+            "Default": 69,
+            "lb": 69,
+            "ub": 241,
+            "type": "float"
+            },
+            {
+            "Name": "$P2BHP1",
+            "Default": 69,
+            "lb": 69,
+            "ub": 241,
+            "type": "float"
+            },
+            {
+            "Name": "$P3BHP1",
+            "Default": 69,
+            "lb": 69,
+            "ub": 241,
+            "type": "float"
+            },
+            {
+            "Name": "$P4BHP1",
+            "Default": 69,
+            "lb": 69,
+            "ub": 241,
+            "type": "float"
+            },
+            {
+            "Name": "$I1BHP2",
+            "Default": 414,
+            "lb": 282,
+            "ub": 414,
+            "type": "float"
+            },
+            {
+            "Name": "$P1BHP2",
+            "Default": 69,
+            "lb": 69,
+            "ub": 241,
+            "type": "float"
+            },
+            {
+            "Name": "$P2BHP2",
+            "Default": 69,
+            "lb": 69,
+            "ub": 241,
+            "type": "float"
+            },
+            {
+            "Name": "$P3BHP2",
+            "Default": 69,
+            "lb": 69,
+            "ub": 241,
+            "type": "float"
+            },
+            {
+            "Name": "$P4BHP2",
+            "Default": 69,
+            "lb": 69,
+            "ub": 241,
+            "type": "float"
+            },
+            {
+            "Name": "$I1BHP3",
+            "Default": 414,
+            "lb": 282,
+            "ub": 414,
+            "type": "float"
+            },
+            {
+            "Name": "$P1BHP3",
+            "Default": 69,
+            "lb": 69,
+            "ub": 241,
+            "type": "float"
+            },
+            {
+            "Name": "$P2BHP3",
+            "Default": 69,
+            "lb": 69,
+            "ub": 241,
+            "type": "float"
+            },
+            {
+            "Name": "$P3BHP3",
+            "Default": 69,
+            "lb": 69,
+            "ub": 241,
+            "type": "float"
+            },
+            {
+            "Name": "$P4BHP3",
+            "Default": 69,
+            "lb": 69,
+            "ub": 241,
+            "type": "float"
+            }
+        ],
+   "vectors":
+         {
+            "summary": ["FOPR", 
+                        "FWPR",
+                        "FGPR",
+                        "FGIR",
+                        "FWIR"],
+            "static3d": [
+                           "PERMX"
+                        ],
+            "dynamic3d": []
+         },
+   "optimization": 
+            {
+                "parameters": 
+                {
+                    "maxIter": 100,
+                    "optimizer": "DFTR",
+                    "costFunction": "NPV",
+                    "constraints": {
+                        "FWPT": {
+                            "is_active": false,
+                            "value": 1000000,
+                            "type": "inequality",
+                            "robustness": {
+                                "type": "percentile",
+                                "value": 95
+                            }
+                        },
+                        "FGPT": {
+                            "is_active": false,
+                            "value": 250E+6,
+                            "type": "inequality",
+                            "robustness": {
+                                "type": "percentile",
+                                "value": 95
+                            }
+                        }
+                    },
+                    "constants": {
+                           "gamma_0": 0.7,
+                           "gamma_1": 0.9,
+                           "gamma_2": 2.0,
+                           "eta_1": 0.25,
+                           "eta_2": 0.75,
+                            "mu": 0.01,
+                            "gamma_vartheta": 0.1,
+                            "kappa_vartheta": 0.0001,
+                            "kappa_radius": 0.8,
+                            "kappa_mu": 10,
+                            "kappa_tmd": 0.01,
+                            "init_radius": 0.8,
+                            "stopping_radius": 1E-5,
+                            "L_threshold": 100.0
+                        },
+                    "options": {
+                        "budget" : 2000,
+                        "max_points" : 51
+                    }
+                }
+            }
+}
