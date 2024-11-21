@@ -62,7 +62,7 @@ class Dynamic3DPropertyKeys():
         #              "RS"]
         self.keys = []
         
-def get_summary(realizations, storage):
+def get_summary(realizations, storage, sum_keys:list):
     
     casename = list(realizations.keys())[0]
     # for casename in realizations:
@@ -76,7 +76,8 @@ def get_summary(realizations, storage):
     summary_keys = summary.keys()
     available_keys = ["YEARS"]
     for k in summary_keys:
-        for _k in SummaryKeys().keys:
+        # for _k in SummaryKeys().keys:
+        for _k in sum_keys:
             if _k in k:
                 available_keys.append(k)
                 
@@ -108,7 +109,7 @@ def get_summary(realizations, storage):
     
     return summary_dict
 
-def get_3dprops(realizations, storage):
+def get_3dprops(realizations, storage, static3d_keys:list, dynamic3d_keys:list):
     
     cs = list(realizations.keys())[0]
     # for casename in realizations:
@@ -121,7 +122,8 @@ def get_3dprops(realizations, storage):
     
     static_available_keys = []
     for k in static3d.keys():
-        for _k in Static3DPropertyKeys().keys:
+        # for _k in Static3DPropertyKeys().keys:
+        for _k in static3d_keys:
             if _k in k:
                 static_available_keys.append(k)
         
@@ -165,7 +167,8 @@ def get_3dprops(realizations, storage):
     
     dynamic_available_keys = []
     for k in dynamic3d.keys():
-        for _k in Dynamic3DPropertyKeys().keys:
+        # for _k in Dynamic3DPropertyKeys().keys:
+        for _k in dynamic3d_keys:
             if _k in k:
                 dynamic_available_keys.append(k)
         
@@ -212,10 +215,17 @@ def main(argv):
     
     realizations = studies["simulation"]["realizations"]
     storage = studies["simulation"]["storage"]
-    # check summary
-    summary = get_summary(realizations, storage)
     
-    static3d, dynamic3d = get_3dprops(realizations, storage)
+    # fetch list of summaries to load
+    sum_keys = studies["creation"]["config"]["vectors"]["summary"]
+    
+    # check summary
+    summary = get_summary(realizations, storage, sum_keys)
+    
+    # fetch list of 3d props to load
+    static3d_keys = studies["creation"]["config"]["vectors"]["static3d"]
+    dynamic3d_keys = studies["creation"]["config"]["vectors"]["dynamic3d"]
+    static3d, dynamic3d = get_3dprops(realizations, storage, static3d_keys, dynamic3d_keys)
     
     now = datetime.now()
     timestamp = datetime.timestamp(now)

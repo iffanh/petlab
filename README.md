@@ -9,7 +9,7 @@ As in CLRM, the two main frameworks featured in this tool are the History matchi
 3. Extract ensemble : extracting the result from the ensemble that has been run
 4. Optimize ensemble : finding the most optimal control based on some objective function
 5. History match ensemble : updating the ensemble to match the historical data 
-
+6. Evaluate ensemble : running an ensemble with a different set of controls
 
 
 ## History matching framework

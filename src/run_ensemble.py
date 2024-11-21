@@ -9,6 +9,8 @@ except ImportError:
 from datetime import datetime
 from pathlib import Path
 
+import ecl.eclfile 
+
 import time
 from wrapt_timeout_decorator import *
 
@@ -36,7 +38,10 @@ def change_control(base_datafile_path, real_datafile_path, controls):
         file.write(filedata)
 
 def simulate_case(simulator_path, real_name, real_path):
-    command = [simulator_path, '--enable-terminal-output=false', real_path]
+    if "flow" in simulator_path:
+        command = [simulator_path, '--enable-terminal-output=false', real_path]
+    elif "ecl" in simulator_path:
+        command = [simulator_path, real_path[:-5]] #does not need the .DATA format
     
     return command
     
@@ -45,7 +50,7 @@ def run_case(base_datafile_path, real_datafile_path, controls, simulator_path, r
     command = simulate_case(simulator_path, real_name, real_datafile_path)
     return command
 
-@timeout(360) #10 min timeout # 1 hour timeout
+@timeout(3000) #10 min timeout # 1 hour timeout
 def run_cases(simulator_path, study, simfolder_path, controls, n_parallel):
     
     _, tail = os.path.split(study['creation']['root']) # dir_path = /path/to/data
@@ -70,6 +75,22 @@ def run_cases(simulator_path, study, simfolder_path, controls, n_parallel):
         realizations[real_name] = real_datafile_path
     
     is_success = u.run_bash_commands_in_parallel(commands, max_tries=1, n_parallel=n_parallel)
+    
+    # post process to know whether the simulation ends successfully or not
+    # When a simulation fails, flow reports error, while E300 might not
+    # So we check the timesteps generated instead from .UNRST
+    for i, real_name in tqdm(enumerate(base_realizations.keys()), total=l, desc="Preparing: ", leave=False):
+        real_name = root_name + '_%s'%(i+1) # SPE1_i
+        
+        real_path = os.path.join(simfolder_path, real_name) # /path/to/data/SPE1_i
+        real_unrst_path = os.path.join(real_path, real_name + '.UNRST') # /path/to/data/SPE1_i/SPE1_i.DATA
+        
+        if os.path.isfile(real_unrst_path):
+            file = ecl.eclfile.EclFile(real_unrst_path)
+            if len(file.report_steps) == 1:
+                is_success[i] = False
+        else:
+            is_success[i] = False
     
     return realizations, is_success
         

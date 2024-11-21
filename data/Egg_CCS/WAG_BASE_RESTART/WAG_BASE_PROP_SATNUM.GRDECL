@@ -1,0 +1,13 @@
+-- Generated [
+-- Format      : ECLIPSE keywords (grid properties) (ASCII)
+-- Exported by : Petrel 2017.4 Schlumberger
+-- User name   : Aqnan Matthew
+-- Date        : Tuesday, April 13 2021 22:33:26
+-- Project     : EggModel.pet
+-- Grid        : EGG_MODEL_ECL.EGRID
+-- Unit system : ECLIPSE-Metric
+-- Generated ]
+
+SATNUM                                 -- Generated : Petrel
+  25200*1 /
+

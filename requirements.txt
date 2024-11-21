@@ -39,5 +39,6 @@ typing-extensions
 tzdata
 urllib3
 zipp
+wrapt_timeout_decorator
 
 py-trsqp @ git+https://github.com/iffanh/py-trsqp@main
