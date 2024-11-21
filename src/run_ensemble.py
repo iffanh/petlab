@@ -85,12 +85,12 @@ def run_cases(simulator_path, study, simfolder_path, controls, n_parallel):
         real_path = os.path.join(simfolder_path, real_name) # /path/to/data/SPE1_i
         real_unrst_path = os.path.join(real_path, real_name + '.UNRST') # /path/to/data/SPE1_i/SPE1_i.DATA
         
-        file = ecl.eclfile.EclFile(real_unrst_path)
-        
-        if len(file.report_steps) == 1:
+        if os.path.isfile(real_unrst_path):
+            file = ecl.eclfile.EclFile(real_unrst_path)
+            if len(file.report_steps) == 1:
+                is_success[i] = False
+        else:
             is_success[i] = False
-            
-    print(is_success)
     
     return realizations, is_success
         
