@@ -198,7 +198,7 @@ def get_3dprops(realizations, storage, static3d_keys:list, dynamic3d_keys:list):
                 
             matrix = []
             for t in range(len(dynamic3d.report_dates)):
-                matrix.append(dynamic3d[k][0].numpy_view())
+                matrix.append(dynamic3d[k][t].numpy_view())
             
             matrix = np.array(matrix)
             filename = os.path.join(real_dir, f"{k}.npy")
