@@ -261,6 +261,7 @@ def replace_incremental_value(d:dict, case_number:int):
         replaced_value += '%.5f '%float(v)
     
     return replaced_value
+
 def hashable_lru(func):
     cache = lru_cache(maxsize=1024)
 
@@ -285,3 +286,19 @@ def hashable_lru(func):
     lru_decorator.cache_info = cached_function.cache_info
     lru_decorator.cache_clear = cached_function.cache_clear
     return lru_decorator
+
+# Define the function to the distance from the updated variable during the optimization to all the valid 
+# well locations = pd.read_csv(csv_file)
+
+import pandas as pd
+CSV_FILE = './src/utils/valid_well_location 2.csv'
+WELL_LOC = pd.read_csv(CSV_FILE)
+WELL_LOC_ARR = WELL_LOC.to_numpy()
+
+def calculate_distances(variable):    
+	# `variable` is a 2D point (x_var, y_var)     
+    distances = np.linalg.norm(WELL_LOC_ARR - variable, axis=1)    
+    min_index = np.argmin(distances)    
+    nearest_well_location = WELL_LOC.iloc[min_index]
+  
+    return nearest_well_location, distances[min_index]
