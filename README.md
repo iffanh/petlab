@@ -23,7 +23,7 @@ History match methods:
 Optimization methods:
 1. Trust-region method with SQP-Filter
 2. COBYLA
-
+3. NOMAD
 
 ## Configuring a study
 
