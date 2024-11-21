@@ -13,7 +13,6 @@ except ImportError:
     import extract_ensemble
     
 import py_trsqp.trsqp as trsqp
-
 import os
 from datetime import datetime
 
@@ -47,7 +46,7 @@ def mutate_case(root_datafile_path, real_datafile_path, parameters, optimization
         if optim['type'] == "float":
             replaced_value = '%.3f '%Default
         elif optim['type'] == "int":
-            replaced_value = '%s '%int(Default)
+            replaced_value = '%s '%int(Default + 1)
             
         filedata = filedata.replace(Name, replaced_value)
 
@@ -92,7 +91,7 @@ def change_control(base_datafile_path, real_datafile_path, controls):
         if control['type'] == "float":
             replaced_value = '%.3f '%Default
         elif control['type'] == "int":
-            replaced_value = '%s '%int(Default)
+            replaced_value = '%s '%int(Default + 1)
             
         filedata = filedata.replace(Name, replaced_value)
         
@@ -153,6 +152,27 @@ def calculate_cost_function(study):
         return calculate_npv
     elif cf_type == "NetCashFlow-Last":
         return calculate_net_cash_flow
+    elif cf_type == "ImmobileCO2":
+        return calculate_immobile_co2
+    
+def calculate_immobile_co2(study, unit, summary_folder):
+    
+    immobile_co2_storage = []
+    realizations = study['simulation']['realizations']
+    for i, real in enumerate(realizations):
+        FCGMI = np.load(summary_folder[real]["FCGMI_1"])
+    
+        last = FCGMI[-1]*30*44/1000 # conversion to tonne
+
+        immobile_co2_storage.append(last)
+        
+    objective = np.array(immobile_co2_storage)
+    filename = os.path.join(study['extension']['storage'], 'results', 'objective.npy')
+    np.save(filename, objective)
+
+    study['extension']['optimization']['objective'] = filename
+    
+    return study
     
 def calculate_net_cash_flow(study, unit, summary_folder):
     
@@ -183,10 +203,10 @@ def calculate_net_cash_flow(study, unit, summary_folder):
         
     # cashflow = np.nanmean(cashflow_arr)
     cashflow = np.array(cashflow_arr)
-    filename = os.path.join(study['extension']['storage'], 'results', 'cashflow.npy')
+    filename = os.path.join(study['extension']['storage'], 'results', 'objective.npy')
     np.save(filename, cashflow)
 
-    study['extension']['optimization']['NPV'] = filename
+    study['extension']['optimization']['objective'] = filename
     
     return study
     
@@ -294,10 +314,10 @@ def calculate_npv(study, unit, summary_folder):
         npv_arr.append(npv)
         
     npv_arr = np.array(npv_arr).T
-    filename = os.path.join(study['extension']['storage'], 'results', 'NPV.npy')
+    filename = os.path.join(study['extension']['storage'], 'results', 'objective.npy')
     np.save(filename, npv_arr)
 
-    study['extension']['optimization']['NPV'] = filename
+    study['extension']['optimization']['objective'] = filename
     
     return study
 
@@ -329,6 +349,10 @@ def calc_stats(vec:np.ndarray, stats_type:str, *args):
         r = np.mean(vec)
     elif stats_type == "percentile":
         r = np.percentile(vec, args[0])
+    elif stats_type == "minimum":
+        r = np.min(vec)
+    elif stats_type == "maximum":
+        r = np.max(vec)
     
     return r
 
@@ -344,20 +368,30 @@ def cost_function(x, study_path, simulator_path):
             control["Default"] = x[i]
         except TypeError: # for NOMAD
             control["Default"] = x.get_coord(i)
+            
+    ### CHANGE HERE JUST FOR THIS STUDY
+    (controls[0]["Default"], controls[1]["Default"]), _ = u.calculate_distances((controls[0]["Default"], controls[1]["Default"]))
+    (controls[2]["Default"], controls[3]["Default"]), _ = u.calculate_distances((controls[2]["Default"], controls[3]["Default"]))
     
     simfolder_path = study['extension']['storage']
     try:
         realizations, is_success = run_ensemble.run_cases(simulator_path, study, simfolder_path, controls, n_parallel=config['n_parallel'])
         
     except RuntimeError:
-        return (-np.nan, np.nan, np.nan)
+        constraints = config['optimization']['parameters']['constraints']
+        nc = len(constraints)
+        return (-np.nan, [np.nan]*nc, [np.nan]*nc)
     
     except TimeoutError:
-        return (-np.nan, np.nan, np.nan)
+        constraints = config['optimization']['parameters']['constraints']
+        nc = len(constraints)
+        return (-np.nan, [np.nan]*nc, [np.nan]*nc)
     
     # print(is_success)
     if not any(is_success): #every realization is 'false' (failed)
-        return (-np.nan, np.nan, np.nan)
+        constraints = config['optimization']['parameters']['constraints']
+        nc = len(constraints)
+        return (-np.nan, [np.nan]*nc, [np.nan]*nc)
     
     realizations = study['extension']['realizations'] 
     storage = study['extension']['storage']
@@ -366,6 +400,14 @@ def cost_function(x, study_path, simulator_path):
     summary = extract_ensemble.get_summary(realizations, storage, sum_keys)
     study['extension']['optimization']['summary'] = summary
     
+    # fetch list of 3d properties to load
+    stc_keys = study["creation"]["config"]["vectors"]["static3d"]
+    dyn_keys = study["creation"]["config"]["vectors"]["dynamic3d"]
+    static3d, dynamic3d = extract_ensemble.get_3dprops(realizations, storage, stc_keys, dyn_keys)
+    
+    study['extension']['optimization']['static3d'] = static3d
+    study['extension']['optimization']['dynamic3d'] = dynamic3d
+        
     u.save_to_json(study_path, study)
     
     # cost functions
@@ -375,7 +417,7 @@ def cost_function(x, study_path, simulator_path):
         unit = get_unit(study)
         study = calculate_cost_function(study)(study, unit, summary)
         # study = calculate_npv(study, unit, summary)
-        npv_path = study['extension']['optimization']['NPV']
+        npv_path = study['extension']['optimization']['objective']
         npv_arr = np.load(npv_path)[:, is_success]
         # npv_T = np.cumsum(npv_arr, axis=1)[:,-1]
         npv_T = np.cumsum (npv_arr, axis=0)
@@ -386,7 +428,16 @@ def cost_function(x, study_path, simulator_path):
         unit = get_unit(study)
         study = calculate_cost_function(study)(study, unit, summary)
         
-        cashflow_path = study['extension']['optimization']['NPV']
+        cashflow_path = study['extension']['optimization']['objective']
+        cashflow = np.load(cashflow_path)
+        cf = np.mean(cashflow)
+    
+    elif cf_type == "ImmobileCO2":
+        
+        unit = get_unit(study)
+        study = calculate_cost_function(study)(study, unit, summary)
+        
+        cashflow_path = study['extension']['optimization']['objective']
         cashflow = np.load(cashflow_path)
         cf = np.mean(cashflow)
     
@@ -413,7 +464,12 @@ def cost_function(x, study_path, simulator_path):
 
         def compute_normalized_constraint(vector:list, d:dict):
             vector = np.array(vector)[is_success]
-            val = calc_stats(vector, d['robustness']['type'], d['robustness']['value'])
+            if "value" in d['robustness'].keys():
+                val = calc_stats(vector, d['robustness']['type'], d['robustness']['value'])
+            else:
+                val = calc_stats(vector, d['robustness']['type'])
+                
+            # print(f"val = {val}")
             val = (d['value'] - val)/abs(d['value']) 
             return val
         
@@ -463,6 +519,123 @@ def cost_function(x, study_path, simulator_path):
                 v_list.append(val)
            
             val = compute_normalized_constraint(v_list, d)
+            
+        elif c == "FOPT":
+            v_list = []
+            for casename in summary.keys():  
+                vector = np.load(summary[casename]['FOPT'])
+                val = - pick_timestep(vector, d) # negative because we want to have MORE than the target
+                v_list.append(val)
+           
+            val = compute_normalized_constraint(v_list, d)
+            
+        elif c == "ZMF1":
+            #special case where ZMF1 represents the total molar fraction of CO2 as component.
+            #this must be < certain value at producer grid block to not allow CO2 production
+            
+            # first we get ACTNUM
+            v_list = []
+            for casename in static3d.keys():
+                
+                # first we get ACTNUM
+                try:
+                    vector_file = static3d[casename]["ACTNUM"]
+                    vector = np.load(vector_file)
+                    active_indices = [i for i, v in enumerate(vector) if v > 0]
+                except KeyError:
+                    vector_file = static3d[casename]["PORV"]
+                    vector = np.load(vector_file)
+                    active_indices = [i for i, v in enumerate(vector) if v > 0]
+                    
+                # then get the dynamic property
+                cvector = np.load(dynamic3d[casename][c])[-1, :]
+                
+                # vector = np.load(vector_file)
+                
+                DeckParser = dp.DeckParser()
+                _, dims = DeckParser.keyword_search(realizations[casename], keyword="DIMENS")
+                
+                nx = int(dims[0][0])
+                ny = int(dims[0][1])
+                nz = int(dims[0][2])
+                
+                # porv_matrix3d = np.reshape(vector, (nx, ny, nz), order='F')
+                # active_indices_matrix3d = np.reshape(active_indices, (nx, ny, nz), order="F")
+                # cvector_matrix3d = np.reshape(cvector, (nx, ny, nz), order="F")
+                
+                ## get the right block(s)
+                
+                blocks = d['blocks']
+                if blocks['type'] == 'Well':
+                    # find the open completion 
+
+                    _, compdats = DeckParser.keyword_search(realizations[casename], "COMPDAT")
+                    
+                    indices = []
+                    for compdat in compdats:
+                        if compdat[0] == blocks['identifier']:
+                            if compdat[5] == 'OPEN':
+                                indx = int(compdat[1]) - 1
+                                indy = int(compdat[2]) - 1
+                                indz1 = int(compdat[3]) - 1
+                                indz2 = int(compdat[4])
+                                
+                                for kk in range(indz1, indz2):
+                                    indices.append((indx, indy, kk))    
+                     
+                    val = []
+                    for index in indices:      
+                        # val.append(matrix3d[index])
+                        #1d index of the well intersection
+                        unraveled_index = np.ravel_multi_index(index, (nx, ny, nz), order="F")
+                        
+                        # cvector cell index
+                        cell_index_1d = active_indices.index(unraveled_index)
+                         
+                        # print(f"cell_index_1d = {cell_index_1d}")
+                        val.append(cvector[cell_index_1d])
+                    
+                    if blocks['aggregate'] == 'maximum':
+                        val = np.max(val)
+                
+                v_list.append(val)
+            
+            # print
+            val = compute_normalized_constraint(v_list, d)
+        
+        elif c == "ValidLocations":
+            import csv
+            # a collection of valid points in the control is stored in a csv file
+            # only valid for int-like control
+            locations = d["locations"]
+
+            val = []
+            for location in locations:
+                
+                file = location["file"]
+                indices = location["indices"]
+                nc = len(indices) #number of indices
+                
+                with open(file, encoding='utf-8-sig') as f:
+                    reader = csv.reader(f)
+                    locs = list(reader)
+                
+                # print(f"locs = {locs}")
+                locval = []
+                for loc in locs:
+                    dist = 0
+                    for ii, ind in enumerate(indices):
+                        dist += (int(loc[ii]) - controls[ind]["Default"])**2
+                
+                    locval.append(dist)
+                
+                locval = np.min(locval)
+                
+                val.append(locval)
+                
+            val = np.max(val)
+                
+            
         
         else:
             raise NotImplementedError(f"Constraint of type {c} has not been implemented yet.")
@@ -555,7 +728,10 @@ def run_optimization(study_path, simulator_path):
         
         for i, control in enumerate(controls):
             control["Default"] = xsol[i]
-        
+            
+        (controls[0]["Default"], controls[1]["Default"]), _ = u.calculate_distances((controls[0]["Default"], controls[1]["Default"]))
+        (controls[2]["Default"], controls[3]["Default"]), _ = u.calculate_distances((controls[2]["Default"], controls[3]["Default"]))
+            
         simfolder_path = study['extension']['storage']
         realizations, is_success = run_ensemble.run_cases(simulator_path, study, simfolder_path, controls, n_parallel=config['n_parallel'])
         # print(is_success)
@@ -635,7 +811,6 @@ def run_optimization(study_path, simulator_path):
                             bounds=bounds,
                             options={'maxiter': config['optimization']['parameters']['options']['budget']},
                             callback=callback)
-    
         
         OUT['nfev'] = result.nfev
         OUT['status'] = result.status
@@ -741,6 +916,9 @@ def run_optimization(study_path, simulator_path):
         _eqs = [lambda x, study_path=study_path, simulator_path=simulator_path, i=i: cost_function(x, study_path, simulator_path)[1][i] for i in range(n_eq)]
         _ineqs = [lambda x, study_path=study_path, simulator_path=simulator_path, i=i: cost_function(x, study_path, simulator_path)[2][i] for i in range(n_ineq)]
         
+        
+        
+        
         # define bb that is compatible with the package
         def bb(x):
             
@@ -787,10 +965,12 @@ def run_optimization(study_path, simulator_path):
         
         for i, control in enumerate(controls):
             control["Default"] = result['x_best'][i]
+            
+        (controls[0]["Default"], controls[1]["Default"]), _ = u.calculate_distances((controls[0]["Default"], controls[1]["Default"]))
+        (controls[2]["Default"], controls[3]["Default"]), _ = u.calculate_distances((controls[2]["Default"], controls[3]["Default"]))
         
         simfolder_path = study['extension']['storage']
         realizations, is_success = run_ensemble.run_cases(simulator_path, study, simfolder_path, controls, n_parallel=config['n_parallel'])
-        print(is_success)
         
         storage = study['extension']['storage']
         sum_keys = study["creation"]["config"]["vectors"]["summary"]
