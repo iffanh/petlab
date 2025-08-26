@@ -169,19 +169,155 @@
    "controls":
             [
                {
-                  "Name": "$PRODRATE",
+                  "Name": "$PRODRATE0",
                   "Default": 20000,
+                  "lb": 18000,
+                  "ub": 22000,
                   "type": "float"
                },
                {
-                  "Name": "$INJRATE",
+                  "Name": "$PRODRATE1",
+                  "Default": 20000,
+                  "lb": 18000,
+                  "ub": 22000,
+                  "type": "float"
+               },
+               {
+                  "Name": "$PRODRATE2",
+                  "Default": 20000,
+                  "lb": 18000,
+                  "ub": 22000,
+                  "type": "float"
+               },
+               {
+                  "Name": "$PRODRATE3",
+                  "Default": 20000,
+                  "lb": 18000,
+                  "ub": 22000,
+                  "type": "float"
+               },
+               
+               {
+                  "Name": "$PRODRATE4",
+                  "Default": 20000,
+                  "lb": 18000,
+                  "ub": 22000,
+                  "type": "float"
+               },
+               {
+                  "Name": "$PRODRATE5",
+                  "Default": 20000,
+                  "lb": 18000,
+                  "ub": 22000,
+                  "type": "float"
+               },
+               {
+                  "Name": "$PRODRATE6",
+                  "Default": 20000,
+                  "lb": 18000,
+                  "ub": 22000,
+                  "type": "float"
+               },
+               {
+                  "Name": "$PRODRATE7",
+                  "Default": 20000,
+                  "lb": 18000,
+                  "ub": 22000,
+                  "type": "float"
+               },
+               {
+                  "Name": "$PRODRATE8",
+                  "Default": 20000,
+                  "lb": 18000,
+                  "ub": 22000,
+                  "type": "float"
+               },
+               {
+                  "Name": "$PRODRATE9",
+                  "Default": 20000,
+                  "lb": 18000,
+                  "ub": 22000,
+                  "type": "float"
+               },
+               {
+                  "Name": "$INJRATE0",
                   "Default": 100000,
+                  "lb": 90000,
+                  "ub": 110000,
+                  "type": "float"
+               },
+               {
+                  "Name": "$INJRATE1",
+                  "Default": 100000,
+                  "lb": 90000,
+                  "ub": 110000,
+                  "type": "float"
+               },
+               {
+                  "Name": "$INJRATE2",
+                  "Default": 100000,
+                  "lb": 90000,
+                  "ub": 110000,
+                  "type": "float"
+               },
+               {
+                  "Name": "$INJRATE3",
+                  "Default": 100000,
+                  "lb": 90000,
+                  "ub": 110000,
+                  "type": "float"
+               },
+               {
+                  "Name": "$INJRATE4",
+                  "Default": 100000,
+                  "lb": 90000,
+                  "ub": 110000,
+                  "type": "float"
+               },
+               {
+                  "Name": "$INJRATE5",
+                  "Default": 100000,
+                  "lb": 90000,
+                  "ub": 110000,
+                  "type": "float"
+               },
+               {
+                  "Name": "$INJRATE6",
+                  "Default": 100000,
+                  "lb": 90000,
+                  "ub": 110000,
+                  "type": "float"
+               },
+               {
+                  "Name": "$INJRATE7",
+                  "Default": 100000,
+                  "lb": 90000,
+                  "ub": 110000,
+                  "type": "float"
+               },
+               {
+                  "Name": "$INJRATE8",
+                  "Default": 100000,
+                  "lb": 90000,
+                  "ub": 110000,
+                  "type": "float"
+               },
+               {
+                  "Name": "$INJRATE9",
+                  "Default": 100000,
+                  "lb": 90000,
+                  "ub": 110000,
                   "type": "float"
                }
             ],
    "vectors":
         {
-            "summary": ["FWPT", 
+            "summary": ["FOPR",
+                        "FGPR",
+                        "FWPR",
+                        "FGIR",
+                        "FWIR", 
+                        "FWPT", 
                         "FOPT",
                         "FWIT"],
             "static3d": [],
@@ -192,24 +328,22 @@
                "parameters": 
                   {
                      "maxIter": 20,
+                     "optimizer": "STOSAG",
                      "costFunction": "NPV",
                      "constraints": {},
+                     "well_covariance_parameters": {
+                        "Nw" : 2,
+                        "std" : [0.1, 0.1],
+                        "Ns"  : [4, 4],
+                        "Nt"  : [10, 10]
+                     },
                      "constants": {
-                           "gamma_0": 0.5,
-                           "gamma_1": 0.8,
-                           "gamma_2": 1.5,
-                           "eta_1": 0.0001,
-                           "eta_2": 0.01,
-                           "mu": 0.01,
-                           "gamma_vartheta": 0.1,
-                           "kappa_vartheta": 0.0001,
-                           "kappa_radius": 0.8,
-                           "kappa_mu": 10,
-                           "kappa_tmd": 0.01,
-                           "init_radius": 0.2,
-                           "stopping_radius": 0.001,
-                           "L_threshold": 1.0
-                       }
+                        "mode": 4,
+                        "max_iter": 20,
+                        "line_search_max_iter": 20,
+                        "line_search_alpha": 0.01
+                     }
+                     
                   }
             },
    "historymatching":

@@ -70,7 +70,11 @@ def run_cases(simulator_path, study, simfolder_path, controls, n_parallel):
 
         real_datafile_path = os.path.join(real_path, real_name + '.DATA') # /path/to/data/SPE1_i/SPE1_i.DATA
         base_datafile_path = base_realizations[real_name]
-        command = run_case(base_datafile_path, real_datafile_path, controls, simulator_path, real_name)
+        
+        if isinstance(controls[0], list): # in STOSAG, each control is applied to each realization
+            command = run_case(base_datafile_path, real_datafile_path, controls[i], simulator_path, real_name)
+        else:
+            command = run_case(base_datafile_path, real_datafile_path, controls, simulator_path, real_name)
         commands.append(command)
         realizations[real_name] = real_datafile_path
     

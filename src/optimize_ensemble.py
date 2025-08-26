@@ -12,7 +12,7 @@ except ImportError:
     import run_ensemble
     import extract_ensemble
     
-import py_trsqp.trsqp as trsqp
+# import py_trsqp.trsqp as trsqp
 
 import os
 from datetime import datetime
@@ -332,20 +332,174 @@ def calc_stats(vec:np.ndarray, stats_type:str, *args):
     
     return r
 
+def cost_function_stosag(x, study_path, simulator_path):
+    
+    study = u.read_json(study_path)
+    config = u.read_json(study['creation']['json'])
+    
+    # if config['optimization']['parameters']['optimizer'] == "STOSAG":
+    if x.ndim == 2 and config['optimization']['parameters']['optimizer'] == "STOSAG": #
+        # In STOSAG, each control correspond to one ensemble member. Thus, we must set the controls one by one.
+        # Here, x must be an array of controls with length equal to the number of ensemble members.  
+        # The size of x is N ensemble x N controls
+        
+        Ne = x.shape[0]
+        controls = [ config['controls'] for i in range(Ne)] # initialize controls for each ensemble member
+         
+        for i, controls_i in enumerate(controls):
+            for j, control in enumerate(controls_i):
+                control["Default"] = x[i, j]
+            
+        simfolder_path = study['extension']['storage']
+        
+    else:
+        
+        controls = config['controls']
+        for i, control in enumerate(controls):
+            try:
+                control["Default"] = x[i]
+            except TypeError: # for NOMAD
+                control["Default"] = x.get_coord(i)
+    
+        simfolder_path = study['extension']['storage']
+        
+    try:
+        realizations, is_success = run_ensemble.run_cases(simulator_path, study, simfolder_path, controls, n_parallel=config['n_parallel'])
+        
+    except RuntimeError:
+        return (-np.nan, np.nan, np.nan)
+    
+    except TimeoutError:
+        return (-np.nan, np.nan, np.nan)
+    
+    # print(is_success)
+    if not any(is_success): #every realization is 'false' (failed)
+        return (-np.nan, np.nan, np.nan)
+    
+    realizations = study['extension']['realizations'] 
+    storage = study['extension']['storage']
+    # fetch list of summaries to load
+    sum_keys = study["creation"]["config"]["vectors"]["summary"]
+    summary = extract_ensemble.get_summary(realizations, storage, sum_keys)
+    study['extension']['optimization']['summary'] = summary
+    
+    u.save_to_json(study_path, study)
+    
+    
+    ### In STOSAG, we want to return all the values, not just the robustness measure
+    
+    # cost functions
+    cf_type = config['optimization']['parameters']['costFunction'] 
+    if cf_type == "NPV":
+        # get npv
+        unit = get_unit(study)
+        study = calculate_cost_function(study)(study, unit, summary)
+        # study = calculate_npv(study, unit, summary)
+        npv_path = study['extension']['optimization']['OF']
+        npv_arr = np.load(npv_path)[:, is_success]
+        # npv_T = np.cumsum(npv_arr, axis=1)[:,-1]
+        npv_T = np.cumsum (npv_arr, axis=0)
+        cf = npv_T[-1,:]
+        
+    elif cf_type == "NetCashFlow-Last":
+        
+        unit = get_unit(study)
+        study = calculate_cost_function(study)(study, unit, summary)
+        
+        cashflow_path = study['extension']['optimization']['OF']
+        cf = np.load(cashflow_path)
+    
+    else:
+        raise NotImplementedError(f"Cost function of type {cf_type} has not been implemented yet.")
+        
+    eqs = []
+    ineqs = []
+    
+    # constraints
+    constraints = config['optimization']['parameters']['constraints']
+    for c, d in constraints.items():
+        
+        if not d['is_active']:
+            continue 
+        
+        def pick_timestep(vector:np.ndarray, d:dict):
+            if d['timestep'] == 'all':
+                return np.max(vector)
+            elif d['timestep'] == 'last':
+                return vector[-1]
+            else:
+                raise Exception(f"'timestep' must be 'all' or 'last'. Found {d['timestep']}.")
+
+        def compute_normalized_constraint(vector:list, d:dict):
+            vector = np.array(vector)[is_success]
+            val = calc_stats(vector, d['robustness']['type'], d['robustness']['value'])
+            val = (d['value'] - val)/abs(d['value']) 
+            return val
+        
+        if c == "FWPT":
+            v_list = []
+            for casename in summary.keys():  
+                vector = np.load(summary[casename]['FWPT'])
+                val = pick_timestep(vector, d)
+                v_list.append(val)  
+            
+        elif "WWPT" in c:
+            well = d["wellname"]
+            v_list = []
+            for casename in summary.keys():  
+                vector = np.load(summary[casename][f'WWPT:{well}'])
+                val = pick_timestep(vector, d)
+                v_list.append(val)    
+        
+        elif c == "FWCT":
+            v_list = []
+            for casename in summary.keys():  
+                vector = np.load(summary[casename]['FWCT'])
+                val = pick_timestep(vector, d)
+                v_list.append(val)     
+            
+        elif "WWCT" in c:
+            well = d["wellname"]
+            v_list = []
+            for casename in summary.keys():  
+                vector = np.load(summary[casename][f'WWCT:{well}'])
+                val = pick_timestep(vector, d)
+                v_list.append(val) 
+
+        elif c == "FGPT":
+            v_list = []
+            for casename in summary.keys():  
+                vector = np.load(summary[casename]['FGPT'])
+                val = pick_timestep(vector, d)
+                v_list.append(val)
+        
+        else:
+            raise NotImplementedError(f"Constraint of type {c} has not been implemented yet.")
+        
+        if d['type'] == "inequality":
+            ineqs.append(v_list)
+        elif d['type'] == "equality":
+            eqs.append(v_list)
+    
+    results = (-cf, eqs, ineqs)
+    return results
+
+
 @u.np_cache
 def cost_function(x, study_path, simulator_path):
     
     study = u.read_json(study_path)
     config = u.read_json(study['creation']['json'])
-    controls = config['controls']
     
+    controls = config['controls']
     for i, control in enumerate(controls):
         try:
             control["Default"] = x[i]
         except TypeError: # for NOMAD
             control["Default"] = x.get_coord(i)
-    
+
     simfolder_path = study['extension']['storage']
+        
     try:
         realizations, is_success = run_ensemble.run_cases(simulator_path, study, simfolder_path, controls, n_parallel=config['n_parallel'])
         
@@ -875,6 +1029,82 @@ def run_optimization(study_path, simulator_path):
         for i, xs in enumerate(optimizer.res):
             OUT['xs'][i]['constraint'] = optimizer.res[i]['constraint'].tolist()
             OUT['xs'][i]['allowed'] = bool(optimizer.res[i]['allowed'])
+        
+        return OUT
+    
+    elif optimizer == "STOSAG":
+        from stosag.stosag import stosag
+        from stosag import utilities as stosag_utilities
+        
+        cf = lambda x, study_path=study_path, simulator_path=simulator_path: cost_function_stosag(x, study_path, simulator_path)[0]
+        _eqs = [lambda x, study_path=study_path, simulator_path=simulator_path, i=i: cost_function_stosag(x, study_path, simulator_path)[1][i] for i in range(n_eq)]
+        _ineqs = [lambda x, study_path=study_path, simulator_path=simulator_path, i=i: cost_function_stosag(x, study_path, simulator_path)[2][i] for i in range(n_ineq)]
+        
+         # define bounds
+        lb = []
+        ub = []
+        for c in controls:
+            try:
+                lb.append(c['lb'])
+            except:
+                lb.append(-np.inf)
+                
+            try:
+                ub.append(c['ub'])
+            except:
+                ub.append(np.inf)
+        
+        # ub = [c["ub"] for c in controls]
+        
+        Ct_parameters = config['optimization']['parameters']['well_covariance_parameters']
+        # redefine constants
+        Ct = stosag_utilities.create_spherical_covariance_function(
+            Ct_parameters['Nw'],
+            Ct_parameters['std'],
+            Ct_parameters['Ns'],
+            Ct_parameters['Nt'],
+        )
+        
+        st = stosag(
+            x0=np.array(x0), 
+            functions=cf, 
+            lb=lb, 
+            ub=ub, 
+            Nens=config["Ne"],
+            Ct=Ct,
+            constants=config['optimization']['parameters']['constants'],
+        )
+        
+        st.run()
+        
+        # run best points
+        print("run the latest ...")
+        cost_function(st.x_list[-1], study_path, simulator_path)
+
+        # xsol = tr.iterates[-1]["y_curr"]
+        # xsol = tr.iterates[-1]['best_point']["y"]
+        xsol = st.x_list[-1]
+        study = u.read_json(study_path)
+        config = u.read_json(study['creation']['json'])
+        controls = config['controls']
+        
+        for i, control in enumerate(controls):
+            control["Default"] = xsol[i]
+        
+        simfolder_path = study['extension']['storage']
+        realizations, is_success = run_ensemble.run_cases(simulator_path, study, simfolder_path, controls, n_parallel=config['n_parallel'])
+        # print(is_success)
+        
+        storage = study['extension']['storage']
+        sum_keys = study["creation"]["config"]["vectors"]["summary"]
+        summary = extract_ensemble.get_summary(realizations, storage, sum_keys)
+        study = calculate_cost_function(study)(study, get_unit(study), summary)
+        # study = calculate_npv(study, get_unit(study), summary)
+
+        OUT = {}
+        OUT['x_best'] = st.x_list
+        OUT['f_best'] = st.j_list
+        OUT['nb_evals'] = st.N_EVAL
         
         return OUT
         
