@@ -9,7 +9,8 @@ except ImportError:
 from datetime import datetime
 from pathlib import Path
 
-import ecl.eclfile 
+# import ecl.eclfile
+from resdata.resfile import ResdataFile
 
 import time
 from wrapt_timeout_decorator import *
@@ -71,10 +72,14 @@ def run_cases(simulator_path, study, simfolder_path, controls, n_parallel):
         real_datafile_path = os.path.join(real_path, real_name + '.DATA') # /path/to/data/SPE1_i/SPE1_i.DATA
         base_datafile_path = base_realizations[real_name]
         
-        if isinstance(controls[0], list): # in STOSAG, each control is applied to each realization
-            command = run_case(base_datafile_path, real_datafile_path, controls[i], simulator_path, real_name)
+        if len(controls) > 0:
+            if isinstance(controls[0], list): # in STOSAG, each control is applied to each realization
+                command = run_case(base_datafile_path, real_datafile_path, controls[i], simulator_path, real_name)
+            else:
+                command = run_case(base_datafile_path, real_datafile_path, controls, simulator_path, real_name)
         else:
             command = run_case(base_datafile_path, real_datafile_path, controls, simulator_path, real_name)
+            
         commands.append(command)
         realizations[real_name] = real_datafile_path
     
@@ -90,7 +95,7 @@ def run_cases(simulator_path, study, simfolder_path, controls, n_parallel):
         real_unrst_path = os.path.join(real_path, real_name + '.UNRST') # /path/to/data/SPE1_i/SPE1_i.DATA
         
         if os.path.isfile(real_unrst_path):
-            file = ecl.eclfile.EclFile(real_unrst_path)
+            file = ResdataFile(real_unrst_path)
             if len(file.report_steps) == 1:
                 is_success[i] = False
         else:

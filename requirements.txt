@@ -5,7 +5,7 @@ charset-normalizer
 contourpy
 cwrap
 cycler
-ecl
+resdata
 emcee
 fonttools
 gstools

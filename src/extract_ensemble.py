@@ -1,8 +1,8 @@
 import sys
-from ecl.summary import EclSum
+from resdata.summary import Summary
 # from ecl.grid import EclGrid
 # from ecl.eclfile import Ecl3DFile, EclRestartFile
-import ecl.eclfile
+import resdata.resfile
 try:
     from .utils import utilities as u
 except ImportError:
@@ -71,7 +71,7 @@ def get_summary(realizations, storage, sum_keys:list):
     # dirname = os.path.dirname(real_path)
     # summary_path = os.path.join(dirname, casename + ".SMSPEC")
     
-    summary = EclSum(real_path)
+    summary = Summary(real_path)
     
     summary_keys = summary.keys()
     available_keys = ["YEARS"]
@@ -96,7 +96,7 @@ def get_summary(realizations, storage, sum_keys:list):
                 summary_dict[casename] = {}
             
             real_path = realizations[casename]
-            summary = EclSum(real_path)
+            summary = Summary(real_path)
             vector = summary.numpy_vector(k)
         
             real_dir = os.path.join(data_dir, casename)
@@ -118,7 +118,7 @@ def get_3dprops(realizations, storage, static3d_keys:list, dynamic3d_keys:list):
     
     # Save static
     static3d_path = os.path.join(dirname, cs + ".INIT")
-    static3d = ecl.eclfile.EclFile(static3d_path)
+    static3d = resdata.resfile.ResdataFile(static3d_path)
     
     static_available_keys = []
     for k in static3d.keys():
@@ -144,7 +144,7 @@ def get_3dprops(realizations, storage, static3d_keys:list, dynamic3d_keys:list):
             real_path = realizations[casename]
             dirname = os.path.dirname(real_path)
             static3d_path = os.path.join(dirname, casename + ".INIT")
-            static3d = ecl.eclfile.EclFile(static3d_path)
+            static3d = resdata.resfile.ResdataFile(static3d_path)
     
             vector = static3d[k][0].numpy_view()
         
@@ -163,7 +163,7 @@ def get_3dprops(realizations, storage, static3d_keys:list, dynamic3d_keys:list):
     dirname = os.path.dirname(real_path)
     # Save dynamic
     dynamic3d_path = os.path.join(dirname, cs + ".UNRST")
-    dynamic3d = ecl.eclfile.EclFile(dynamic3d_path)
+    dynamic3d = resdata.resfile.ResdataFile(dynamic3d_path)
     
     dynamic_available_keys = []
     for k in dynamic3d.keys():
@@ -186,7 +186,7 @@ def get_3dprops(realizations, storage, static3d_keys:list, dynamic3d_keys:list):
             Path(real_dir).mkdir(parents=True, exist_ok=True)
             
             dynamic3d_path = os.path.join(dirname, casename + ".UNRST")
-            dynamic3d = ecl.eclfile.EclFile(dynamic3d_path)
+            dynamic3d = resdata.resfile.ResdataFile(dynamic3d_path)
     
             try:
                 tmp = dynamic3d_dict[casename]

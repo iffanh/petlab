@@ -502,7 +502,6 @@ def cost_function(x, study_path, simulator_path):
         
     try:
         realizations, is_success = run_ensemble.run_cases(simulator_path, study, simfolder_path, controls, n_parallel=config['n_parallel'])
-        
     except RuntimeError:
         return (-np.nan, np.nan, np.nan)
     
@@ -656,9 +655,10 @@ def run_optimization(study_path, simulator_path):
     n_eq, n_ineq = get_n_constraints(constraints)
     
     optimizer = config['optimization']['parameters']['optimizer']
-    
+
     if optimizer == "DFTR":
         # define cost function
+        import py_trsqp.trsqp as trsqp
         cf = lambda x, study_path=study_path, simulator_path=simulator_path: cost_function(x, study_path, simulator_path)[0]
         eqs = [lambda x, study_path=study_path, simulator_path=simulator_path, i=i: cost_function(x, study_path, simulator_path)[1][i] for i in range(n_eq)]
         ineqs = [lambda x, study_path=study_path, simulator_path=simulator_path, i=i: cost_function(x, study_path, simulator_path)[2][i] for i in range(n_ineq)]
@@ -1069,7 +1069,8 @@ def run_optimization(study_path, simulator_path):
             x0=np.array(x0), 
             functions=cf, 
             lb=lb, 
-            ub=ub, 
+            ub=ub,
+            ineqs=[*_ineqs],
             Nens=config["Ne"],
             Ct=Ct,
             constants=config['optimization']['parameters']['constants'],
@@ -1173,6 +1174,7 @@ def main(args):
     dt_start = str(datetime.fromtimestamp(timestamp))
     study['extension']['start'] = dt_start
     out = run_optimization(study_path, simulator_path)
+    
     now = datetime.now()
     timestamp = datetime.timestamp(now)
     dt_end = str(datetime.fromtimestamp(timestamp))
