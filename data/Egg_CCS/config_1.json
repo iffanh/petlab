@@ -1,0 +1,94 @@
+{
+    "Name": "Egg_CCS_1",
+    "Ne": 1,
+    "n_parallel": 1,
+    "root": "/home/iffanh/tests/with_Jinjie/petlab/data/Egg_CCS/WAG_BASE_RESTART/WAG_BASE.DATA",
+    "parameters":
+        [],
+   "controls": 
+        [
+            {
+                "Name": "$INJECT1X",
+                "Default": 10,
+                "lb": 1,
+                "ub": 60,
+                "type": "int"
+            },
+            {
+                "Name": "$INJECT1Y",
+                "Default": 25,
+                "lb": 1,
+                "ub": 60,
+                "type": "int"
+            },
+            {
+                "Name": "$PROD1X",
+                "Default": 13,
+                "lb": 1,
+                "ub": 60,
+                "type": "int"
+            },
+            {
+                "Name": "$PROD1Y",
+                "Default": 41,
+                "lb": 1,
+                "ub": 60,
+                "type": "int"
+            }
+        ],
+    "vectors":
+        {
+            "summary": ["FCGMI_1"],
+            "static3d": [],
+            "dynamic3d": []
+        },
+   "optimization": 
+        {
+            "parameters": 
+            {
+                "maxIter": 50,
+                "costFunction": "ImmobileCO2",
+                "optimizer":"DFTR",
+                "constraints": {
+                    "FWPT": {
+                        "is_active": false,
+                        "value": 12000,
+                        "type": "inequality",
+                        "robustness": {
+                            "type": "percentile",
+                            "value": 95
+                        }
+                    },
+                    "FGPT": {
+                        "is_active": false,
+                        "value": 250E+6,
+                        "type": "inequality",
+                        "robustness": {
+                            "type": "percentile",
+                            "value": 95
+                        }
+                    }
+                },
+                "options" : {
+                    "budget": 200,
+                    "max_points": 9
+                },
+                "constants": {
+                        "gamma_0": 0.7,
+                        "gamma_1": 0.9,
+                        "gamma_2": 2.0,
+                        "eta_1": 1E-7,
+                        "eta_2": 1E-6,
+                        "mu": 0.01,
+                        "gamma_vartheta": 0.1,
+                        "kappa_vartheta": 0.0001,
+                        "kappa_radius": 0.8,
+                        "kappa_mu": 10,
+                        "kappa_tmd": 0.01,
+                        "init_radius": 1.0,
+                        "stopping_radius": 0.001,
+                        "L_threshold": 1.0
+                    }
+            }
+        }
+}

@@ -18,6 +18,14 @@
       ],
    "controls":
          [],
+   "vectors":
+         {
+            "summary": ["WOPR", 
+                        "WWCT",
+                        "WWIR"],
+            "static3d": [],
+            "dynamic3d": []
+         },
    "historymatching":
             {
                "updatepath":"./data/SPE10/spe10model2/update",

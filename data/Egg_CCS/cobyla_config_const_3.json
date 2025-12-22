@@ -1,0 +1,89 @@
+{
+    "Name": "cobyla_Egg_CCS_const_3",
+    "Ne": 1,
+    "n_parallel": 1,
+    "root": "/home/iffanh/tests/with_Jinjie/petlab/data/Egg_CCS/WAG_BASE_RESTART/WAG_BASE.DATA",
+    "parameters":
+        [],
+   "controls": 
+        [
+            {
+                "Name": "$INJECT1X",
+                "Default": 20,
+                "lb": 1,
+                "ub": 60,
+                "type": "int"
+            },
+            {
+                "Name": "$INJECT1Y",
+                "Default": 20,
+                "lb": 1,
+                "ub": 60,
+                "type": "int"
+            },
+            {
+                "Name": "$PROD1X",
+                "Default": 30,
+                "lb": 1,
+                "ub": 60,
+                "type": "int"
+            },
+            {
+                "Name": "$PROD1Y",
+                "Default": 30,
+                "lb": 1,
+                "ub": 60,
+                "type": "int"
+            }
+        ],
+    "vectors":
+        {
+            "summary": ["FCGMI_1", "WWCT"],
+            "static3d": ["PORV"],
+            "dynamic3d": ["ZMF1"]
+        },
+   "optimization": 
+        {
+            "parameters": 
+            {
+                "maxIter": 50,
+                "costFunction": "ImmobileCO2",
+                "optimizer":"COBYLA",
+                "constraints": {
+                    "ZMF1": {
+                        "is_active": true,
+                        "blocks": {
+                            "type": "Well",
+                            "identifier": "PROD1",
+                            "aggregate": "maximum"
+                        },
+                        "value": 0.3,
+                        "type": "inequality",
+                        "robustness": {
+                            "type": "maximum"
+                        }
+                    }
+                },
+                "options" : {
+                    "budget": 200,
+                    "max_points": 9
+                },
+                "constants": {
+                        "gamma_0": 0.7,
+                        "gamma_1": 0.9,
+                        "gamma_2": 1.5,
+                        "eta_1": 0.0001,
+                        "eta_2": 0.01,
+                        "mu": 0.01,
+                        "gamma_vartheta": 0.1,
+                        "kappa_vartheta": 0.0001,
+                        "kappa_radius": 0.8,
+                        "kappa_mu": 10,
+                        "kappa_tmd": 0.01,
+                        "init_radius": 1.0,
+                        "stopping_radius": 0.001,
+                        "L_threshold": 1.0
+                    }
+            }
+        }
+}
