@@ -255,7 +255,7 @@
                             "kappa_tmd": 0.01,
                             "init_radius": 0.5,
                             "stopping_radius": 1E-5,
-                            "L_threshold": 1.0
+                            "L_threshold": 10.0
                         },
                     "options": {
                         "budget" : 1000,

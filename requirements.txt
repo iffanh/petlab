@@ -5,7 +5,7 @@ charset-normalizer
 contourpy
 cwrap
 cycler
-ecl
+resdata
 emcee
 fonttools
 gstools
@@ -40,5 +40,6 @@ tzdata
 urllib3
 zipp
 scikit-learn
+wrapt_timeout_decorator
 
 py-trsqp @ git+https://github.com/iffanh/py-trsqp@main

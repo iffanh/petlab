@@ -1,6 +1,7 @@
-METHOD="DFTR"
+METHOD="COBYQA"
 
-for i in $(seq 1 10)
+for i in $(seq 1 5)
+# for i in 1 {3...10}
 do
     echo "STUDY ${i}"
     CONFIG_FILE="data/SPE10/spe10_layer21_ensemble/SPE10_5C_WATER_${METHOD}_$i.json"
