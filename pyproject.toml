@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "petlab"
+version = "0.1.0"
+description = "An open-source framework for Closed-Loop Reservoir Management (CLRM)"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "numpy",
+    "scipy",
+    "pandas",
+    "matplotlib",
+    "tqdm",
+    "resdata",
+    "gstools",
+    "scikit-learn",
+    "casadi",
+    "wrapt_timeout_decorator",
+]
+
+[project.optional-dependencies]
+# Optional optimizer/history-match backends (see petlab.optimization.extras
+# and petlab.historymatch.extras) -- none of these are required for the
+# default DFTR + ESMDA path, so none of them are hard dependencies. `chaospy`
+# in particular pulls in `numpoly`, which needs a C compiler to build from
+# source on platforms without a prebuilt wheel -- only pay that cost if you
+# actually want the Spectral/PCESMDA history-match methods.
+spectral = ["chaospy"]
+cobyqa = ["cobyqa"]
+nomad = ["PyNomad"]
+bo = ["bayesian-optimization"]
+dftr = ["py-trsqp @ git+https://github.com/iffanh/py-trsqp@main"]
+dev = ["pytest"]
+
+[project.scripts]
+petlab = "petlab.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["petlab*"]

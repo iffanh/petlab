@@ -12,9 +12,13 @@ test/object_pick.py
 
 storage/
 studies/
+simulations/
 
 *.npy
 venv/*
+.venv/
+build/
+*.egg-info/
 EggModel*
 
 *.png

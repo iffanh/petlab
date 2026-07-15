@@ -1,0 +1,326 @@
+{
+    "Name": "Egg_CLRM_Truth",
+    "Ne": 1,
+    "n_parallel": 1,
+    "root": "./data/Egg/Egg_Model_Data_Files_v2/Eclipse/EGG_CLRM.DATA",
+    "parameters": [
+        {
+            "Name": "$PERMFILE",
+            "Type": "IncrementalArray",
+            "Distribution": {
+                "parameters": {
+                    "prefix": "./data/Egg/Egg_Model_Data_Files_v2/Permeability_Realizations/PERM",
+                    "suffix": "_ECL.INC"
+                }
+            }
+        }
+    ],
+    "controls": [
+        {
+            "Name": "$PROD1BHP1",
+            "Default": 395.0,
+            "lb": 250,
+            "ub": 550,
+            "type": "float"
+        },
+        {
+            "Name": "$PROD2BHP1",
+            "Default": 395.0,
+            "lb": 250,
+            "ub": 550,
+            "type": "float"
+        },
+        {
+            "Name": "$PROD3BHP1",
+            "Default": 395.0,
+            "lb": 250,
+            "ub": 550,
+            "type": "float"
+        },
+        {
+            "Name": "$PROD4BHP1",
+            "Default": 395.0,
+            "lb": 250,
+            "ub": 550,
+            "type": "float"
+        },
+        {
+            "Name": "$INJECT1RATE1",
+            "Default": 79.5,
+            "lb": 60,
+            "ub": 100,
+            "type": "float"
+        },
+        {
+            "Name": "$INJECT2RATE1",
+            "Default": 79.5,
+            "lb": 60,
+            "ub": 100,
+            "type": "float"
+        },
+        {
+            "Name": "$INJECT3RATE1",
+            "Default": 79.5,
+            "lb": 60,
+            "ub": 100,
+            "type": "float"
+        },
+        {
+            "Name": "$INJECT4RATE1",
+            "Default": 79.5,
+            "lb": 60,
+            "ub": 100,
+            "type": "float"
+        },
+        {
+            "Name": "$INJECT5RATE1",
+            "Default": 79.5,
+            "lb": 60,
+            "ub": 100,
+            "type": "float"
+        },
+        {
+            "Name": "$INJECT6RATE1",
+            "Default": 79.5,
+            "lb": 60,
+            "ub": 100,
+            "type": "float"
+        },
+        {
+            "Name": "$INJECT7RATE1",
+            "Default": 79.5,
+            "lb": 60,
+            "ub": 100,
+            "type": "float"
+        },
+        {
+            "Name": "$INJECT8RATE1",
+            "Default": 79.5,
+            "lb": 60,
+            "ub": 100,
+            "type": "float"
+        },
+        {
+            "Name": "$PROD1BHP2",
+            "Default": 395.0,
+            "lb": 250,
+            "ub": 550,
+            "type": "float"
+        },
+        {
+            "Name": "$PROD2BHP2",
+            "Default": 395.0,
+            "lb": 250,
+            "ub": 550,
+            "type": "float"
+        },
+        {
+            "Name": "$PROD3BHP2",
+            "Default": 395.0,
+            "lb": 250,
+            "ub": 550,
+            "type": "float"
+        },
+        {
+            "Name": "$PROD4BHP2",
+            "Default": 395.0,
+            "lb": 250,
+            "ub": 550,
+            "type": "float"
+        },
+        {
+            "Name": "$INJECT1RATE2",
+            "Default": 79.5,
+            "lb": 60,
+            "ub": 100,
+            "type": "float"
+        },
+        {
+            "Name": "$INJECT2RATE2",
+            "Default": 79.5,
+            "lb": 60,
+            "ub": 100,
+            "type": "float"
+        },
+        {
+            "Name": "$INJECT3RATE2",
+            "Default": 79.5,
+            "lb": 60,
+            "ub": 100,
+            "type": "float"
+        },
+        {
+            "Name": "$INJECT4RATE2",
+            "Default": 79.5,
+            "lb": 60,
+            "ub": 100,
+            "type": "float"
+        },
+        {
+            "Name": "$INJECT5RATE2",
+            "Default": 79.5,
+            "lb": 60,
+            "ub": 100,
+            "type": "float"
+        },
+        {
+            "Name": "$INJECT6RATE2",
+            "Default": 79.5,
+            "lb": 60,
+            "ub": 100,
+            "type": "float"
+        },
+        {
+            "Name": "$INJECT7RATE2",
+            "Default": 79.5,
+            "lb": 60,
+            "ub": 100,
+            "type": "float"
+        },
+        {
+            "Name": "$INJECT8RATE2",
+            "Default": 79.5,
+            "lb": 60,
+            "ub": 100,
+            "type": "float"
+        },
+        {
+            "Name": "$PROD1BHP3",
+            "Default": 395.0,
+            "lb": 250,
+            "ub": 550,
+            "type": "float"
+        },
+        {
+            "Name": "$PROD2BHP3",
+            "Default": 395.0,
+            "lb": 250,
+            "ub": 550,
+            "type": "float"
+        },
+        {
+            "Name": "$PROD3BHP3",
+            "Default": 395.0,
+            "lb": 250,
+            "ub": 550,
+            "type": "float"
+        },
+        {
+            "Name": "$PROD4BHP3",
+            "Default": 395.0,
+            "lb": 250,
+            "ub": 550,
+            "type": "float"
+        },
+        {
+            "Name": "$INJECT1RATE3",
+            "Default": 79.5,
+            "lb": 60,
+            "ub": 100,
+            "type": "float"
+        },
+        {
+            "Name": "$INJECT2RATE3",
+            "Default": 79.5,
+            "lb": 60,
+            "ub": 100,
+            "type": "float"
+        },
+        {
+            "Name": "$INJECT3RATE3",
+            "Default": 79.5,
+            "lb": 60,
+            "ub": 100,
+            "type": "float"
+        },
+        {
+            "Name": "$INJECT4RATE3",
+            "Default": 79.5,
+            "lb": 60,
+            "ub": 100,
+            "type": "float"
+        },
+        {
+            "Name": "$INJECT5RATE3",
+            "Default": 79.5,
+            "lb": 60,
+            "ub": 100,
+            "type": "float"
+        },
+        {
+            "Name": "$INJECT6RATE3",
+            "Default": 79.5,
+            "lb": 60,
+            "ub": 100,
+            "type": "float"
+        },
+        {
+            "Name": "$INJECT7RATE3",
+            "Default": 79.5,
+            "lb": 60,
+            "ub": 100,
+            "type": "float"
+        },
+        {
+            "Name": "$INJECT8RATE3",
+            "Default": 79.5,
+            "lb": 60,
+            "ub": 100,
+            "type": "float"
+        }
+    ],
+    "vectors": {
+        "summary": [
+            "FOPR",
+            "FWPR",
+            "FWIR",
+            "FOPT",
+            "FWPT",
+            "FWIT",
+            "WOPR",
+            "WWPR",
+            "WWIR",
+            "WBHP",
+            "WLPR"
+        ],
+        "static3d": [
+            "PERMX"
+        ],
+        "dynamic3d": []
+    },
+    "historymatching": {
+        "method": "ESMDA",
+        "updatepath": "",
+        "model3d": [],
+        "timestep": "",
+        "objectives": {}
+    },
+    "optimization": {
+        "parameters": {
+            "maxIter": 0,
+            "optimizer": "DFTR",
+            "costFunction": "NPV",
+            "constraints": {},
+            "constants": {
+                "gamma_0": 0.6,
+                "gamma_1": 0.8,
+                "gamma_2": 1.5,
+                "eta_1": 1e-12,
+                "eta_2": 1e-11,
+                "mu": 0.01,
+                "gamma_vartheta": 0.1,
+                "kappa_vartheta": 0.0001,
+                "kappa_radius": 0.8,
+                "kappa_mu": 10,
+                "kappa_tmd": 0.01,
+                "init_radius": 0.5,
+                "stopping_radius": 1e-05,
+                "L_threshold": 10.0
+            },
+            "options": {
+                "budget": 0,
+                "max_points": 0
+            }
+        }
+    }
+}

@@ -1,29 +1,42 @@
 # petlab
 
-## An open-source framework for Closed-Loop Reservoir Management (CLRM). 
+## An open-source framework for Closed-Loop Reservoir Management (CLRM).
 
-As in CLRM, the two main frameworks featured in this tool are the History matching framework and the Reservoir optimization framework. However, this tool also has support features such as generation of geological realizations and extraction of simulation model results. There are 5 main modules: 
+`petlab` mutates Eclipse-style `.DATA` decks by substituting `$PLACEHOLDER`
+tokens, runs them through a simulator binary (OPM `flow` or `eclrun`), and
+reads the results back via `resdata` -- so it works non-intrusively with any
+Eclipse-compatible simulator. The actual implementation lives in
+`src/petlab/`, installable as a package (`pip install -e .`) with a single
+CLI entrypoint, `petlab`:
 
-1. Create ensemble : creating an ensemble by populating the values based on some distributions.  
-2. Run ensemble : running the ensemble 
-3. Extract ensemble : extracting the result from the ensemble that has been run
-4. Optimize ensemble : finding the most optimal control based on some objective function
-5. History match ensemble : updating the ensemble to match the historical data 
-6. Evaluate ensemble : running an ensemble with a different set of controls
+```
+petlab create-ensemble <config.json>       # sample uncertain parameters, write one deck per realization
+petlab run <simulator> <study.json>        # apply the configured default controls and simulate
+petlab extract <study.json>                # pull summary/3D vectors out as .npy files
+petlab optimize <simulator> <study.json>   # optimize controls (default: DFTR)
+petlab historymatch <study.json>           # update parameters against observed data (default: ES-MDA)
+petlab evaluate <simulator> <study.json> <controls.csv>   # evaluate one specific control vector
+petlab clrm <simulator> <clrm_config.json> # the full closed loop: optimize -> apply to truth -> history-match -> repeat
+```
 
+The old `src/create_ensemble.py`/`run_ensemble.py`/etc. scripts still work
+(they're now thin shims calling into `petlab.cli`), so existing shell
+scripts under `examples/` don't need to change.
 
-## History matching framework
-
-History match methods:
-1. Ensemble Smoother with Multiple Data Assimilation (ESMDA), 
-2. (New method) Partial Least Square Regression with Spectral Decomposition. 
-
-## Optimization framework
-
-Optimization methods:
-1. Trust-region method with SQP-Filter
-2. COBYLA
-3. NOMAD
+- **History matching**: Ensemble Smoother with Multiple Data Assimilation
+  (ES-MDA, with PLSR dimensionality reduction bundled in for full-field
+  parameters) is the default. A standalone PLSR + Polynomial Chaos
+  Expansion "Spectral" method (no ES-MDA) and a PCE-surrogate ES-MDA variant
+  are available as optional, non-default methods --
+  see `petlab.historymatch.extras`.
+- **Optimization**: the derivative-free trust-region filter method ("DFTR",
+  `py_trsqp`) is the default. COBYLA, COBYQA, NOMAD, Bayesian Optimization
+  and StoSAG are available as optional backends (each needs its own extra
+  package, see `pyproject.toml`'s `[project.optional-dependencies]`) --
+  see `petlab.optimization.extras`.
+- **Closed-loop management**: `petlab clrm` runs the actual receding-horizon
+  MPC loop (thesis Ch. 7) -- see `docs/CLRM.md` and the Egg model demo under
+  `data/Egg/`.
 
 ## Configuring a study
 
@@ -61,11 +74,19 @@ The .JSON file must include the following:
 
 </details>
 
-## Installation requirement
+## Installation
 
 ```shell
-pip install gstools 
-pip install tqdm 
-pip install ecl
-pip install wrapt_timeout_decorator
+pip install -e .                 # core package + petlab CLI (numpy/scipy/resdata/gstools/scikit-learn/casadi/...)
+pip install -e ".[dftr]"         # + the default optimizer backend (py_trsqp)
+pip install -e ".[spectral]"     # + chaospy, for the optional Spectral/PCESMDA history-match methods
+pip install -e ".[dev]"          # + pytest, to run tests/unit (no simulator needed)
 ```
+
+You also need an Eclipse-compatible simulator on your `PATH` (OPM `flow` or
+`eclrun`) to actually run anything beyond `create-ensemble` -- there's no way
+around that, `petlab` only orchestrates the simulator, it doesn't replace
+it. `requirements.txt` is kept for the old `pip install -r requirements.txt`
+workflow, but the `pyproject.toml` extras above are the more precise/lighter
+option (e.g. it doesn't force a C-compiler-requiring `chaospy` install on
+you just to use the default ES-MDA + DFTR path).
